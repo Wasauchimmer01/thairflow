@@ -1,0 +1,44 @@
+import smbus2 
+import time
+
+MPU6050_ADDR = 0x4A
+bus=smbus2.SMBus(1)
+
+# Register-Adressen
+PWR_MGMT_1   = 0x6B
+ACCEL_XOUT_H = 0x3B
+GYRO_XOUT_H  = 0x43
+TEMP_OUT_H   = 0x41
+
+def read_word(bus, addr, reg):
+    high = bus.read_byte_data(addr, reg)
+    low = bus.read_byte_data(addr, reg + 1)
+    value = (high << 8) + low
+    if value >= 0x8000:
+        value = -((65535 - value) + 1)
+    return value
+
+def get_sensor_data(bus):
+    accel_x = read_word(bus, MPU6050_ADDR, ACCEL_XOUT_H)
+    accel_y = read_word(bus, MPU6050_ADDR, ACCEL_XOUT_H + 2)
+    accel_z = read_word(bus, MPU6050_ADDR, ACCEL_XOUT_H + 4)
+    
+    temp_raw = read_word(bus, MPU6050_ADDR, TEMP_OUT_H)
+    temperature = temp_raw / 340.0 + 36.53
+    
+    gyro_x = read_word(bus, MPU6050_ADDR, GYRO_XOUT_H)
+    gyro_y = read_word(bus, MPU6050_ADDR, GYRO_XOUT_H + 2)
+    gyro_z = read_word(bus, MPU6050_ADDR, GYRO_XOUT_H + 4)
+    
+    return {
+        "accel": (accel_x / 16384.0, accel_y / 16384.0, accel_z / 16384.0),
+        "gyro": (gyro_x / 131.0, gyro_y / 131.0, gyro_z / 131.0),
+        "temp": temperature
+    }
+
+def main():
+        # Sensor aktivieren
+        bus.write_byte_data(MPU6050_ADDR, PWR_MGMT_1, 0)
+        while True:
+            data = get_sensor_data(bus)
+            time.sleep(1)
