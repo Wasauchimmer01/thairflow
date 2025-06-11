@@ -1,0 +1,11 @@
+Sensoren überprüfen
+	SEN66 hat CO2 aber kein Formaldehyd
+	SEN68 hat Formaldehyd aber kein CO2
+	
+
+Schaltplan (alles auf alle PINs?) -- theoretisch ja und alles auf einen Bus?
+
+Bus Adressen nach schauen --> Florian fragen ob er das gemacht hat
+
+
+
