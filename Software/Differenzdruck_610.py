@@ -22,12 +22,9 @@ def read_sdp610(bus):
     except Exception as e:
         return None
 
-def Drucksensor():
+def read_measurement():
     pressure = read_sdp610(bus)
     if pressure is not None:
         time.sleep(1)
         return pressure
 
-#Fürs Hauptprogramm
-
-Drucksensor()

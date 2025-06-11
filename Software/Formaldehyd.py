@@ -1,25 +1,27 @@
 import time
 import smbus2 
-from smbus2 import i2c_msg
-import struct
 
 SFA30_ADDRESS = 0x5D
 bus=smbus2.SMBus(1)
+
 # Befehl zum Starten der Messung
 CMD_START_CONTINUOUS_MEASUREMENT = [0x00, 0x10]
 
 # Befehl zum Lesen der Messwerte
 CMD_READ_MEASUREMENT = [0x03, 0x00]
 
-def send_command(bus, command):
-    bus.write_i2c_block_data(SFA30_ADDRESS, command[0])
+def start_up():
+    bus.write_i2c_block_data(SFA30_ADDRESS, CMD_START_CONTINUOUS_MEASUREMENT[0], CMD_START_CONTINUOUS_MEASUREMENT[1])
+    time.sleep(1)
 
-def read_measurement(bus):
-    send_command(bus, CMD_READ_MEASUREMENT)
+def measure():
+
+    bus.write_i2c_block_data(SFA30_ADDRESS, CMD_READ_MEASUREMENT[0])
+
     time.sleep(0.05)
 
     data = bus.read_i2c_block_data(SFA30_ADDRESS, CMD_READ_MEASUREMENT, 9)
-   
+
 
     def convert(high, low):
         return (high << 8) | low
@@ -34,12 +36,7 @@ def read_measurement(bus):
 
     return hcho, temp, hum
 
-def Formaldehyd():
-       
-        send_command(bus, CMD_START_CONTINUOUS_MEASUREMENT)
-        time.sleep(1)
-        hcho, temp, hum = read_measurement(bus)
+def read_measurement():
+        hcho, temp, hum = measure()
         return hcho, temp, hum 
 
-#Fürs Hauptprogramm
-Formaldehyd()

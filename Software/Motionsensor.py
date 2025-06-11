@@ -11,13 +11,3 @@ def monitor_motion():
         motion = False
     return motion
     
-def send_data():
-     if monitor_motion()==True:
-          motion_sensor.on()
-     else:
-          motion_sensor.off()  
-
-
-#Fürs Hauptprogramm
-send_data()
-sleep(10)

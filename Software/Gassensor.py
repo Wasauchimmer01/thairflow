@@ -9,6 +9,12 @@ def start_measurement():
     bus.write_i2c_block_data(SEN66_ADDRESS, command[0])
     time.sleep(0.1)
 
+def check_data():
+    if bus.read_i2c_block_data(SEN66_ADDRESS,command[1])==True:
+        return True
+    else:
+        return False
+
 def read_measurement():
     try:
         # Lese 27 Bytes (z. B. 2 Byte CO2, 1 CRC, 2 Byte Temp, 1 CRC, 2 Byte RH, 1 CRC)
@@ -38,15 +44,8 @@ def read_measurement():
         nox = nox_raw/10
         co2 = co2_raw
         
-        return pm1,pm25,pm40,pm100,humidity,temperature,voc,nox,co2
+        return pm10,pm25,pm40,pm100,humidity,temperature,voc,nox,co2
     
     except Exception as e:
         return None, None, None,None,None,None,None,None,None
-
-# Fürs Hauptprogramm
-
-start_measurement() #einmalig um kontinuierliche Messung zu starten
-
-if bus.read_i2c_block_data(SEN66_ADDRESS,command[1])==True:
-    pm1,pm2,pm4,pm10,hum,temp,voc,nox,co2 = read_measurement()
-
+    
