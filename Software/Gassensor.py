@@ -1,5 +1,5 @@
 import smbus2
-import time
+
 
 SEN66_ADDRESS = 0x6B
 bus = smbus2.SMBus(1)
@@ -7,7 +7,6 @@ command = [0x0021, 0x0202, 0x0300]  #(muss aus Datenblatt entnommen werden) (Sta
 
 def start_measurement():
     bus.write_i2c_block_data(SEN66_ADDRESS, command[0])
-    time.sleep(0.1)
 
 def check_data():
     if bus.read_i2c_block_data(SEN66_ADDRESS,command[1])==True:

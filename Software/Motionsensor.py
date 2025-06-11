@@ -1,5 +1,4 @@
 from gpiozero import InputDevice
-from time import sleep
 
 # GPIO-Pin für den OUT-Pin des RCWL-0516
 motion_sensor = InputDevice(31)  # GPIO6

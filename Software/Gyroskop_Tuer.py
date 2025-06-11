@@ -1,5 +1,4 @@
 import smbus2 
-import time
 
 MPU6050_ADDR = 0x4B
 bus=smbus2.SMBus(1)

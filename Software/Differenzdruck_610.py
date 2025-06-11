@@ -1,5 +1,5 @@
 import smbus2 
-import time
+
 
 SDP610_ADDR = 0x40
 bus=smbus2.SMBus(1)
@@ -25,6 +25,5 @@ def read_sdp610(bus):
 def read_measurement():
     pressure = read_sdp610(bus)
     if pressure is not None:
-        time.sleep(1)
         return pressure
 
