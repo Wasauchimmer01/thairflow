@@ -3,7 +3,7 @@ import smbus2
 name = 'Gassensor'
 SEN66_ADDRESS = 0x6B
 bus = smbus2.SMBus(1)
-command = [0x0021, 0x0202, 0x0300]  #(muss aus Datenblatt entnommen werden) (Starten,Status,Lesen)
+command = [0x0021, 0x0202, 0x0300]  #(Starten,Status,Lesen)
 errorcode=[12,11,9,7,6]  # CO2,PM,CO2,Gas,RH&T
 
 def start_up(nummer):
