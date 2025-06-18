@@ -1,13 +1,22 @@
 import smbus2 
 
-
-SDP610_ADDR = 0x25
+name='SDP810'
+SDP810_ADDR = 0x25
 bus=smbus2.SMBus(1)
+
+def start_up(nummer):
+        status='ON'
+        error=0
+        who_am_i = bus.read_byte_data(SDP810_ADDR, 0x75)
+        if who_am_i != SDP810_ADDR:
+             status ='OFF'
+             error=1
+        return name,status,error,SDP810_ADDR,nummer
 
 def read_sdp610(bus):
     try:
         # Lese 2 Bytes vom Sensor
-        data = bus.read_i2c_block_data(SDP610_ADDR, 0xF1, 2)  # 0xF1 = Read Pressure Command
+        data = bus.read_i2c_block_data(SDP810_ADDR, 0xF1, 2)  # 0xF1 = Read Pressure Command
         raw_pressure = (data[0] << 8) | data[1]
 
         # Werte sind als signed integer

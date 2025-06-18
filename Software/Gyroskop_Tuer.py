@@ -1,5 +1,6 @@
 import smbus2 
 
+name='Gyro-Tür'
 MPU6050_ADDR = 0x4B
 bus=smbus2.SMBus(1)
 
@@ -9,9 +10,16 @@ ACCEL_XOUT_H = 0x3B
 GYRO_XOUT_H  = 0x43
 TEMP_OUT_H   = 0x41
 
-def start_up():
+def start_up(nummer):
         # Sensor aktivieren
         bus.write_byte_data(MPU6050_ADDR, PWR_MGMT_1, 0) 
+        status='ON'
+        error=0
+        who_am_i = bus.read_byte_data(MPU6050_ADDR, 0x75)
+        if who_am_i != MPU6050_ADDR:
+             status ='OFF'
+             error=1
+        return name,status,error,MPU6050_ADDR,nummer
 
 def read_word(bus, addr, reg):
     high = bus.read_byte_data(addr, reg)

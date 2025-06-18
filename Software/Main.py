@@ -1,18 +1,22 @@
 import Gassensor
 import Differenzdruck_610
+import Differenzdruck_810
 import Formaldehyd
 import Gyroskop_Fenster
 import Gyroskop_Tuer
 import Motionsensor
 import gpiozero
 import datetime
+import Config
 
 def Initialisieren():
-
-    Gassensor.start_measurement()
-    Formaldehyd.start_up
-    Gyroskop_Fenster.start_up
-    Gyroskop_Tuer.start_up
+    #Nummer bitte nach Reihenfolge vergeben
+    Config.add_sensor(Gassensor.start_up(1))
+    Config.add_sensor(Formaldehyd.start_up(2))
+    Config.add_sensor(Gyroskop_Fenster.start_up(3))
+    Config.add_sensor(Gyroskop_Tuer.start_up(4))
+    Config.add_sensor(Differenzdruck_610.start_up(5))
+    Config.add_sensor(Differenzdruck_810.start_up(6))
 
 def Messdaten_generieren():
 

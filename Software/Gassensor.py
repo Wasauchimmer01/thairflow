@@ -1,12 +1,21 @@
 import smbus2
 
-
+name = 'Gassensor'
 SEN66_ADDRESS = 0x6B
 bus = smbus2.SMBus(1)
 command = [0x0021, 0x0202, 0x0300]  #(muss aus Datenblatt entnommen werden) (Starten,Status,Lesen)
+errorcode=[12,11,9,7,6]  # CO2,PM,CO2,Gas,RH&T
 
-def start_measurement():
+def start_up(nummer):
     bus.write_i2c_block_data(SEN66_ADDRESS, command[0])
+    status='ON'
+    for x in errorcode:
+        if get_bit(bus.read_i2c_block_data(SEN66_ADDRESS),x)==1:
+         status='OFF'
+         error = x
+         break
+    return name, status, error, SEN66_ADDRESS, nummer
+
 
 def check_data():
     if bus.read_i2c_block_data(SEN66_ADDRESS,command[1])==True:
@@ -48,3 +57,6 @@ def read_measurement():
     except Exception as e:
         return None, None, None,None,None,None,None,None,None
     
+def get_bit(register, bit_number):
+  mask = 1 << bit_number  # Erstellt eine Bitmaske für das gewünschte Bit
+  return (register & mask) >> bit_number

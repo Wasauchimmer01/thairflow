@@ -1,8 +1,17 @@
 import smbus2 
 
-
+name ='SDP610'
 SDP610_ADDR = 0x40
 bus=smbus2.SMBus(1)
+
+def start_up(nummer):
+        status='ON'
+        error=0
+        who_am_i = bus.read_byte_data(SDP610_ADDR, 0x75)
+        if who_am_i != SDP610_ADDR:
+             status ='OFF'
+             error=1
+        return name,status,error,SDP610_ADDR,nummer
 
 def read_sdp610(bus):
     try:
