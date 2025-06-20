@@ -6,17 +6,36 @@ import Gyroskop_Fenster
 import Gyroskop_Tuer
 import Motionsensor
 import gpiozero
-import datetime
+from datetime import datetime
 import Config
+import csv
+
+
+
+sensor_anzahl=7
+startline=0
+init_completed = 0 #wird 1 wenn das initialisieren abgeschlossen ist
+messdaten_counter =0 #wird bei jeder Messung erhöht
 
 def Initialisieren():
-    #Nummer bitte nach Reihenfolge vergeben
+    #Nummer nach Reihenfolge vergeben
     Config.add_sensor(Gassensor.start_up(1))
     Config.add_sensor(Formaldehyd.start_up(2))
     Config.add_sensor(Gyroskop_Fenster.start_up(3))
     Config.add_sensor(Gyroskop_Tuer.start_up(4))
     Config.add_sensor(Differenzdruck_610.start_up(5))
     Config.add_sensor(Differenzdruck_810.start_up(6))
+
+    with open('config.csv') as csvdatei:
+        csv_reader_object = csv.reader(csvdatei)
+        for row in csv_reader_object:
+            print(row)
+            if row[2]!='0':
+                #print("Initialisieren failed")
+                return 1
+            else:
+                #print('Initialisieren complete')
+                return 0
 
 def Messdaten_generieren():
 
@@ -36,8 +55,34 @@ def Messdaten_generieren():
 
     gyro_tuer_data = Gyroskop_Tuer.get_sensor_data
 
-    measurement_Time = datetime.datetime
+    measurement_Time = datetime.now().isoformat()
 
-    data_string = measurement_Time,gas_data,formaldehyd_data,differenz_data,motion_data,gyro_fenster_data,gyro_tuer_data
+    gasdata= measurement_Time,'Gas','OFF',1,'XXX'
+    formdata= measurement_Time,'Form','ON',2,'XVX'
 
-    return data_string
+    data=[ gasdata,formdata]
+    
+    with open('Daten.csv', "r", newline="") as f:
+        lines = list(csv.reader(f)) 
+    while len(lines) < (startline+messdaten_counter*sensor_anzahl):
+        lines.append([])
+    for x in data:    
+        lines[(startline+messdaten_counter*sensor_anzahl) - 1+x] = data[x]
+        with open('Daten.csv', "w", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerows(lines)
+
+
+while True:
+    if init_completed!=1:
+        if Initialisieren!=0:
+            print('Initialisieren fehlgeschlagen')
+            break
+
+    allData=Messdaten_generieren 
+    messdaten_counter=messdaten_counter+1
+
+
+
+
+
