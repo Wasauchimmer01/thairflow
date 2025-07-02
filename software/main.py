@@ -2,8 +2,8 @@ import gassensor
 import differenzdruck_610
 import differenzdruck_810
 import formaldehyd
-import gyroskop_Fenster
-import gyroskop_Tuer
+import gyroskop_fenster
+import gyroskop_tuer
 import motionsensor
 import gpiozero
 from datetime import datetime
@@ -20,8 +20,8 @@ def initialisieren():
     #Nummer nach Reihenfolge vergeben
     # config.add_sensor(gassensor.start_up(1))
     # config.add_sensor(formaldehyd.start_up(2))
-    # config.add_sensor(gyroskop_Fenster.start_up(3))
-    # config.add_sensor(gyroskop_Tuer.start_up(4))
+    # config.add_sensor(gyroskop_fenster.start_up(3))
+    # config.add_sensor(gyroskop_tuer.start_up(4))
     config.add_sensor(differenzdruck_610.start_up(1))
     # config.add_sensor(differenzdruck_810.start_up(6))
 
