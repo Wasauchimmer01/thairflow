@@ -4,7 +4,7 @@ setup(
     name='airflow-software',
     version='0.1.0',
     description='Sensor data acquisition and management software',
-    author='Florian Aigner',
+    author='Florian Aigner, Alexander Sommerfeld',
     packages=find_packages(),
     install_requires=[
         'smbus2',

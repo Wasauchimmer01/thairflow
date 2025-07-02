@@ -48,6 +48,22 @@ else
     pip3 --version
 fi
 
+echo "📡 Enabling I2C interface..."
+
+# Enable I2C in /boot/config.txt
+sudo sed -i '/^#*dtparam=i2c_arm=/c\dtparam=i2c_arm=on' /boot/config.txt
+
+# Load i2c-dev kernel module immediately
+sudo modprobe i2c-dev
+
+# Ensure module loads on every boot
+echo "i2c-dev" | sudo tee -a /etc/modules
+
+# Optional: install i2c-tools for testing
+sudo apt install -y i2c-tools
+
+echo "✅ I2C enabled."
+
 echo "Installing gpio driver..."
 sudo apt install -y python3-lgpio
 
@@ -55,4 +71,7 @@ echo "🐍 Setting up virtual environment..."
 cd ~/airflow/airflow
 python3 -m venv .venv
 
-echo "✅ Setup complete!"
+echo "✅ Setup complete! Reboot nessesary!!!."
+
+echo "Scanning for I2C devices..."
+i2cdetect -y 1

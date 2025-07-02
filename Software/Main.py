@@ -1,4 +1,4 @@
-import gassensor
+import Gassensor
 import differenzdruck_610
 import differenzdruck_810
 import formaldehyd
@@ -77,7 +77,10 @@ def xlsx_data(data):
         y=y+len(data)
     sleep(1)
 
-while True:
+
+
+if __name__ == "__main__":
+    while True:
     if init_completed!=1:
         if initialisieren!=0:
             print('Initialisieren fehlgeschlagen')
