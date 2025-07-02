@@ -81,14 +81,14 @@ def xlsx_data(data):
 
 if __name__ == "__main__":
     while True:
-    if init_completed!=1:
-        if initialisieren!=0:
-            print('Initialisieren fehlgeschlagen')
-            break
-        else:
-            init_completed=1        
-            print('Initialisieren erfolgreich')
+        if init_completed!=1:
+            if initialisieren!=0:
+                print('Initialisieren fehlgeschlagen')
+                break
+            else:
+                init_completed=1        
+                print('Initialisieren erfolgreich')
 
-    messdaten_generieren 
-    messdaten_counter=messdaten_counter+1
-    sleep(10)
+        messdaten_generieren 
+        messdaten_counter=messdaten_counter+1
+        sleep(10)
