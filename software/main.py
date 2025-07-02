@@ -1,10 +1,10 @@
-import Gassensor
-import Differenzdruck_610
-import Differenzdruck_810
-import Formaldehyd
-# import gyroskop_Fenster
-# import gyroskop_Tuer
-# import motionsensor
+import gassensor
+import differenzdruck_610
+import differenzdruck_810
+import formaldehyd
+import gyroskop_Fenster
+import gyroskop_Tuer
+import motionsensor
 import gpiozero
 from datetime import datetime
 import config
