@@ -20,10 +20,13 @@ def initialisieren():
     #Nummer nach Reihenfolge vergeben
     # config.add_sensor(gassensor.start_up(1))
     # config.add_sensor(formaldehyd.start_up(2))
-    # config.add_sensor(gyroskop_fenster.start_up(3))
+    config.add_sensor(gyroskop_fenster.start_up(3))
     # config.add_sensor(gyroskop_tuer.start_up(4))
     config.add_sensor(differenzdruck_610.start_up(1))
     # config.add_sensor(differenzdruck_810.start_up(6))
+
+    print("diff_610", differenzdruck_610.start_up(1))
+    print("gyro_fenster", gyroskop_fenster.start_up(3))
 
     with open('config.csv') as csvdatei:
         csv_reader_object = csv.reader(csvdatei)
