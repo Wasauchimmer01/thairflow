@@ -1,7 +1,7 @@
 from gpiozero import InputDevice
 
 # GPIO-Pin für den OUT-Pin des RCWL-0516
-motion_sensor = InputDevice(31)  # GPIO6
+motion_sensor = InputDevice(6)  # GPIO6 # 31
 
 def monitor_motion():
     if motion_sensor.is_active and not motion:
