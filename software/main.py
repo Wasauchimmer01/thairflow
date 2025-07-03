@@ -1,4 +1,4 @@
-import gassensor
+import partikelsensor
 import differenzdruck_610
 import differenzdruck_810
 import formaldehyd
@@ -20,13 +20,17 @@ def initialisieren():
     #Nummer nach Reihenfolge vergeben
     # config.add_sensor(gassensor.start_up(1))
     # config.add_sensor(formaldehyd.start_up(2))
-    config.add_sensor(gyroskop_fenster.start_up(3))
+    fenster = gyroskop_fenster.start_up(3)
+    name,status,error,adresse,nummer = fenster
+    print("fenster", fenster)
+    config.add_sensor(name,status,error,adresse,nummer)
     # config.add_sensor(gyroskop_tuer.start_up(4))
-    config.add_sensor(differenzdruck_610.start_up(1))
+    diff = differenzdruck_610.start_up(1)
+    print("diff", diff)
+    name,status,error,adresse,nummer = diff
+    config.add_sensor(name,status,error,adresse,nummer)
     # config.add_sensor(differenzdruck_810.start_up(6))
 
-    print("diff_610", differenzdruck_610.start_up(1))
-    print("gyro_fenster", gyroskop_fenster.start_up(3))
 
     with open('config.csv') as csvdatei:
         csv_reader_object = csv.reader(csvdatei)
@@ -34,10 +38,10 @@ def initialisieren():
             print(row)
             if row[2]!='0':
                 #print("Initialisieren failed")
-                return 1
+                return 0
             else:
                 #print('Initialisieren complete')
-                return 0
+                return 1
 
 def messdaten_generieren():
 
@@ -61,7 +65,7 @@ def messdaten_generieren():
 
     # data=[measurement_Time,gas_data,formaldehyd_data,differenz_data,motion_data,gyro_fenster_data,gyro_tuer_data]
     
-    xlsx_data(differenz_data)
+    #xlsx_data(differenz_data)
 
 def xlsx_data(data):
     y=1
@@ -83,17 +87,18 @@ def xlsx_data(data):
 
 
 if __name__ == "__main__":
+    info=differenzdruck_610.start_up(1)
+    print(info)
     while True:
-        if init_completed!=1:
-            if initialisieren()==0:
-                print('Initialisieren fehlgeschlagen')
-                break
-            else:
-                init_completed=1        
-                print('Initialisieren erfolgreich')
+    #     if init_completed!=1:
+    #         if initialisieren() == 0:
+    #             print('Initialisieren fehlgeschlagen')
+    #             break
+    #         else:
+    #             init_completed=1        
+    #             print('Initialisieren erfolgreich')
 
-        messdaten_generieren 
+        wert = messdaten_generieren()
         messdaten_counter=messdaten_counter+1
-        sleep(10)
-
-    initialisieren()
+        print("Messdaten generiert:", wert, "Counter:", messdaten_counter)
+        sleep(1)

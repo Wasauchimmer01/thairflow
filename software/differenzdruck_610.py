@@ -29,7 +29,7 @@ def read_sdp610(bus):
         return pressure_pa
 
     except Exception as e:
-        return None
+        return ("error",e)
 
 def read_measurement():
     pressure = read_sdp610(bus)

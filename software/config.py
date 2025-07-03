@@ -11,4 +11,4 @@ with open('config.csv', 'w', newline='') as file:
     writer.writerows(data)
 
 def add_sensor(name,status,error,adresse,nummer):
-    data[nummer]= {'Name': name, 'Status': status,'Error':error, 'Adresse': adresse},
+    data += {'Name': name, 'Status': status,'Error':error, 'Adresse': adresse},
