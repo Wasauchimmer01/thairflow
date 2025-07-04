@@ -157,13 +157,14 @@ def data_printout(data):
           f"Humidity: {humidity}, Temperature: {temperature}, "
           f"VOC Index: {voc}, NOx Index: {nox}, CO2: {co2}")
 
-def get_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--i2c-port', '-p', default='/dev/i2c-1')
-    args = parser.parse_args()
-    return args
+# def get_args():
+#     parser = argparse.ArgumentParser()
+#     parser.add_argument('--i2c-port', '-p', default='/dev/i2c-1')
+#     args = parser.parse_args()
+#     return args
 
 if __name__ == "__main__":
+    from software.utils import get_args
     args = get_args()
     sensor, i2c_transceiver = init_sensor(args.i2c_port)
     print("Starting measurements...")

@@ -44,41 +44,7 @@ from sensirion_i2c_driver.linux_i2c_transceiver import LinuxI2cTransceiver
 from sensirion_i2c_driver import I2cConnection
 from sensirion_i2c_sdp import SdpI2cDevice
 from sensirion_driver_adapters.i2c_adapter.i2c_channel import I2cChannel
-from software.partikelsensor import get_args
-
-# def main():
-#     parser = argparse.ArgumentParser()
-#     parser.add_argument('--i2c-port', '-p', default='/dev/i2c-1',
-#                         help='Linux I2C device path (default: /dev/i2c-1)')
-#     args = parser.parse_args()
-
-#     # Use LinuxI2cTransceiver to talk directly to I2C bus
-#     with LinuxI2cTransceiver(args.i2c_port) as i2c_transceiver:
-#         # Set up the SDP device at I2C address 0x25 (adjust if needed)
-#         sdp = SdpI2cDevice(I2cConnection(i2c_transceiver), slave_address=0x25)
-
-#         # Prepare and start measurement
-#         sdp.stop_continuous_measurement()
-#         sdp.start_continuous_measurement_with_mass_flow_t_comp()
-
-#         try:
-#             for _ in range(500):
-#                 try:
-#                     differential_pressure, temperature = sdp.read_measurement()
-#                     # print("{}, {}".format(differential_pressure, temperature))
-#                     # print("{:0.2f} °C ({} ticks), {:0.2f} Pa ({} ticks)".format(
-#                     #     temperature.degrees_celsius, temperature.ticks,
-#                     #     differential_pressure.pascal, differential_pressure.ticks))
-#                     # time.sleep(0.2)
-#                     print ("Differential Pressure: {} Pa".format(differential_pressure.pascal))
-#                     time.sleep(1)
-#                 except Exception as e:
-#                     print(f"Error reading measurement: {e}")
-#                     continue
-#         finally:
-#             sdp.stop_continuous_measurement()
-#             print("Measurement stopped.")
-
+from software.utils import get_args
 
 def read_measurements(sensor):
     try:

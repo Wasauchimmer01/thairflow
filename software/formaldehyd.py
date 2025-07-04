@@ -53,7 +53,67 @@ def get_bit(register, bit_number):
   mask = 1 << bit_number  # Erstellt eine Bitmaske für das gewünschte Bit
   return (register & mask) >> bit_number
 
+####################################################################
 
+def init_sensor(i2c_port, slave_address=0x5D):
+    """Initialisiert den Sensor und gibt das Sensorobjekt zurück."""
+    i2c_transceiver = LinuxI2cTransceiver(i2c_port)
+    channel = I2cChannel(
+        I2cConnection(i2c_transceiver),
+        slave_address=slave_address,
+        crc=CrcCalculator(8, 0x31, 0xff, 0x0)
+    )
+    sensor = Sfa3xDevice(channel)
+    sensor.device_reset()
+    time.sleep(1.2)
+    device_marking = sensor.get_device_marking()
+    print(f"device_marking: {device_marking};")
+    sensor.start_continuous_measurement()
+    return sensor, i2c_transceiver
+
+def read_measurements(sensor):
+    try:
+        (hcho, humidity, temperature) = sensor.read_measured_values()
+        return hcho, humidity, temperature
+    except Exception as e:
+        print(f"Error reading measurement: {e}")
+        read_measurements(sensor)
+        # not a fan. change error handling
+
+
+def data_printout(data, show_temp=True, show_humidity=True):
+    """Gibt die Messdaten aus."""
+    hcoh, rh, temperature = data
+    string = str(f"HCOH: {hcoh} ppb?")
+    # einheit herrausfinden ppb ist nicht sicher
+    if show_temp:
+        string += str(f"Temperature: {temperature.degrees_celsius} °C")
+    if show_humidity:
+        string += str(f"Humidity: {rh} %")
+    print(string)
+
+def stop_sensor(sensor, i2c_transceiver):
+    """Stoppt die Messung und schließt die Verbindung."""
+    sensor.stop_continuous_measurement()
+    i2c_transceiver.close()
+    print("Measurement stopped and connection closed.")
+
+def test_run(slave_address=0x5D):
+    args = get_args()
+    sensor, i2c_transceiver = init_sensor(args.i2c_port, slave_address=0x5D)
+    i= 0
+    while True:
+        try:
+            data = read_measurements(sensor)
+            i += 1
+            print(f"Measurement {i}")
+            data_printout(data, show_temp = False, show_humidity=False)
+            time.sleep(1)
+        except KeyboardInterrupt:
+            print("Measurement stopped by user.")
+            break
+    stop_sensor(sensor, i2c_transceiver)
+    print("Measurement stopped.")
 
 if __name__ == "__main__":
     import argparse
@@ -62,30 +122,7 @@ if __name__ == "__main__":
     from sensirion_driver_adapters.i2c_adapter.i2c_channel import I2cChannel
     from sensirion_i2c_sfa3x.device import Sfa3xDevice
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--i2c-port', '-p', default='/dev/i2c-1')
-    args = parser.parse_args()
+    from software.utils import get_args
 
-    with LinuxI2cTransceiver(args.i2c_port) as i2c_transceiver:
-        channel = I2cChannel(I2cConnection(i2c_transceiver),
-                            slave_address=0x5D,
-                            crc=CrcCalculator(8, 0x31, 0xff, 0x0))
-        sensor = Sfa3xDevice(channel)
-        sensor.device_reset()
-        time.sleep(1.0)
-        device_marking = sensor.get_device_marking()
-        print(f"device_marking: {device_marking}; "
-            )
-        sensor.start_continuous_measurement()
-        for i in range(100):
-            try:
-                time.sleep(0.5)
-                (hcho, humidity, temperature
-                ) = sensor.read_measured_values()
-                print(f"hcho: {hcho}; "
-                    f"humidity: {humidity}; "
-                    f"temperature: {temperature}; "
-                    )
-            except BaseException:
-                continue
-        sensor.stop_measurement()
+    test_run(slave_address=0x5D)
+
