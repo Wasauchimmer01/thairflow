@@ -52,3 +52,40 @@ def read_measurement():
 def get_bit(register, bit_number):
   mask = 1 << bit_number  # Erstellt eine Bitmaske für das gewünschte Bit
   return (register & mask) >> bit_number
+
+
+
+if __name__ == "__main__":
+    import argparse
+    import time
+    from sensirion_i2c_driver import LinuxI2cTransceiver, I2cConnection, CrcCalculator
+    from sensirion_driver_adapters.i2c_adapter.i2c_channel import I2cChannel
+    from sensirion_i2c_sfa3x.device import Sfa3xDevice
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--i2c-port', '-p', default='/dev/i2c-1')
+    args = parser.parse_args()
+
+    with LinuxI2cTransceiver(args.i2c_port) as i2c_transceiver:
+        channel = I2cChannel(I2cConnection(i2c_transceiver),
+                            slave_address=0x5D,
+                            crc=CrcCalculator(8, 0x31, 0xff, 0x0))
+        sensor = Sfa3xDevice(channel)
+        sensor.device_reset()
+        time.sleep(1.0)
+        device_marking = sensor.get_device_marking()
+        print(f"device_marking: {device_marking}; "
+            )
+        sensor.start_continuous_measurement()
+        for i in range(100):
+            try:
+                time.sleep(0.5)
+                (hcho, humidity, temperature
+                ) = sensor.read_measured_values()
+                print(f"hcho: {hcho}; "
+                    f"humidity: {humidity}; "
+                    f"temperature: {temperature}; "
+                    )
+            except BaseException:
+                continue
+        sensor.stop_measurement()

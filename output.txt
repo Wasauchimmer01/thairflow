@@ -1,0 +1,43 @@
+PM10: 0.70, PM2.5: 0.80, PM4.0: 0.90, PM100: 0.90, Humidity: 53.88, Temperature: 27.34, VOC Index: 215.00, NOx Index: 1.00, CO2: 443
+Measurement 10431 of 100:
+PM10: 0.70, PM2.5: 0.80, PM4.0: 0.90, PM100: 0.90, Humidity: 53.94, Temperature: 27.34, VOC Index: 213.00, NOx Index: 1.00, CO2: 443
+Measurement 10432 of 100:
+PM10: 0.70, PM2.5: 0.80, PM4.0: 0.90, PM100: 0.90, Humidity: 53.98, Temperature: 27.34, VOC Index: 212.00, NOx Index: 1.00, CO2: 445
+Measurement 10433 of 100:
+PM10: 0.70, PM2.5: 0.80, PM4.0: 0.90, PM100: 0.90, Humidity: 54.02, Temperature: 27.34, VOC Index: 210.00, NOx Index: 1.00, CO2: 446
+Measurement 10434 of 100:
+PM10: 0.70, PM2.5: 0.80, PM4.0: 0.90, PM100: 0.90, Humidity: 54.07, Temperature: 27.34, VOC Index: 207.00, NOx Index: 1.00, CO2: 447
+Measurement 10435 of 100:
+PM10: 0.70, PM2.5: 0.80, PM4.0: 0.90, PM100: 0.90, Humidity: 54.11, Temperature: 27.34, VOC Index: 206.00, NOx Index: 1.00, CO2: 447
+Measurement 10436 of 100:
+PM10: 0.70, PM2.5: 0.80, PM4.0: 0.90, PM100: 0.90, Humidity: 54.15, Temperature: 27.34, VOC Index: 205.00, NOx Index: 1.00, CO2: 447
+Measurement 10437 of 100:
+PM10: 0.70, PM2.5: 0.80, PM4.0: 0.90, PM100: 0.90, Humidity: 54.18, Temperature: 27.34, VOC Index: 203.00, NOx Index: 1.00, CO2: 448
+Measurement 10438 of 100:
+PM10: 0.70, PM2.5: 0.80, PM4.0: 0.90, PM100: 0.90, Humidity: 54.21, Temperature: 27.33, VOC Index: 202.00, NOx Index: 1.00, CO2: 449
+Measurement 10439 of 100:
+PM10: 0.70, PM2.5: 0.80, PM4.0: 0.90, PM100: 0.90, Humidity: 54.23, Temperature: 27.32, VOC Index: 201.00, NOx Index: 1.00, CO2: 448
+Measurement 10440 of 100:
+PM10: 0.70, PM2.5: 0.80, PM4.0: 0.90, PM100: 0.90, Humidity: 54.26, Temperature: 27.32, VOC Index: 199.00, NOx Index: 1.00, CO2: 448
+Measurement 10441 of 100:
+PM10: 0.70, PM2.5: 0.80, PM4.0: 0.90, PM100: 0.90, Humidity: 54.30, Temperature: 27.32, VOC Index: 197.00, NOx Index: 1.00, CO2: 449
+Measurement 10442 of 100:
+PM10: 0.70, PM2.5: 0.80, PM4.0: 0.90, PM100: 0.90, Humidity: 54.33, Temperature: 27.32, VOC Index: 196.00, NOx Index: 1.00, CO2: 449
+Measurement 10443 of 100:
+PM10: 0.70, PM2.5: 0.80, PM4.0: 0.90, PM100: 0.90, Humidity: 54.35, Temperature: 27.31, VOC Index: 194.00, NOx Index: 1.00, CO2: 449
+Measurement 10444 of 100:
+PM10: 0.70, PM2.5: 0.80, PM4.0: 0.90, PM100: 0.90, Humidity: 54.37, Temperature: 27.30, VOC Index: 192.00, NOx Index: 1.00, CO2: 449
+^[[A^[[BMeasurement 10445 of 100:
+PM10: 0.70, PM2.5: 0.80, PM4.0: 0.90, PM100: 0.90, Humidity: 54.39, Temperature: 27.30, VOC Index: 191.00, NOx Index: 1.00, CO2: 449
+Measurement 10446 of 100:
+PM10: 0.70, PM2.5: 0.80, PM4.0: 0.90, PM100: 0.90, Humidity: 54.40, Temperature: 27.29, VOC Index: 190.00, NOx Index: 1.00, CO2: 450
+Measurement 10447 of 100:
+PM10: 0.70, PM2.5: 0.80, PM4.0: 0.90, PM100: 0.90, Humidity: 54.42, Temperature: 27.29, VOC Index: 188.00, NOx Index: 1.00, CO2: 450
+Measurement 10448 of 100:
+PM10: 0.70, PM2.5: 0.80, PM4.0: 0.90, PM100: 0.90, Humidity: 54.44, Temperature: 27.29, VOC Index: 186.00, NOx Index: 1.00, CO2: 451
+Measurement 10449 of 100:
+PM10: 0.70, PM2.5: 0.80, PM4.0: 0.90, PM100: 0.90, Humidity: 54.46, Temperature: 27.28, VOC Index: 185.00, NOx Index: 1.00, CO2: 453
+Measurement 10450 of 100:
+PM10: 0.70, PM2.5: 0.80, PM4.0: 0.90, PM100: 0.90, Humidity: 54.48, Temperature: 27.27, VOC Index: 184.00, NOx Index: 1.00, CO2: 455
+Measurement 10451 of 100:
+PM10: 0.70, PM2.5: 0.80, PM4.0: 0.90, PM100: 0.90, Humidity: 54.50, Temperature: 27.27, VOC Index: 182.00, NOx Index: 1.00, CO2: 458

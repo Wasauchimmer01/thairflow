@@ -35,4 +35,17 @@ def read_measurement():
     pressure = read_sdp610(bus)
     if pressure is not None:
         return pressure
+    
+
+#####
+
+if __name__ == "__main__":
+    from software.differenzdruck_810 import test_run
+
+    test_run(slave_address=0x40)
+
+
+    # funktioniert nicht, müssen wir mal prüfen.
+    # vernachlässige ich jez erstmal
+    # mindestens 13 sdp810 vorhanden
 

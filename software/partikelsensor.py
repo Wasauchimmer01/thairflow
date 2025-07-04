@@ -169,10 +169,13 @@ if __name__ == "__main__":
     print("Starting measurements...")
     print("60 secounds startup time for the sensor, please wait...")
     time.sleep(60)
-    for i in range(100):
+    # for i in range(100):
+    i = 0
+    while True:
         try:
             data = read_measurements(sensor)
             print(f"Measurement {i + 1} of 100:")
+            i += 1
             data_printout(data)
             time.sleep(5.0)
         except KeyboardInterrupt:
@@ -183,7 +186,7 @@ if __name__ == "__main__":
     print("Measurement stopped.")
 
 
-
+###################################
     # parser = argparse.ArgumentParser()
     # parser.add_argument('--i2c-port', '-p', default='/dev/i2c-1')
     # args = parser.parse_args()

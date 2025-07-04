@@ -70,14 +70,20 @@ def get_tilt_angle(x_ref, y_ref, z_ref, x, y, z):
 
 
 def test_messure():
-    sensor = mpu6050(0x68)
-    accelerometer_data = sensor.get_accel_data()
-    temp = sensor.get_temp()
-    gyro_data = sensor.get_gyro_data()
+    try:
+        sensor = mpu6050(0x68)
+        accelerometer_data = sensor.get_accel_data()
+        temp = sensor.get_temp()
+        gyro_data = sensor.get_gyro_data()
+    except Exception as e:
+        print(f"Error reading gyro sensor data: {e}")
+        redo = test_messure()
+        return redo
     return accelerometer_data, gyro_data, temp
 
 
 def calibrate_gyro(sensor, num_samples=10000):
+    print("Calibrating gyroscope...this takes like 2 minutes")
     gyro_x_sum = []
     gyro_y_sum = []
     gyro_z_sum = []
@@ -111,7 +117,7 @@ def get_open_angle(anglespeed, open_angle, last_time):
     # Calculate the change in angle (in degrees) using the gyroscope's Z axis (c)
     # Gyroscope values are in degrees per second, so multiply by delta_t to get degrees
     delta_angle = anglespeed * delta_t
-    if abs(delta_angle) < 0.5:
+    if abs(delta_angle) < 1:
         delta_angle = 0.0  # Ignore small changes to reduce drift
     open_angle += delta_angle
     last_time = time.time()
