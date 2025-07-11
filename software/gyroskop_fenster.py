@@ -4,48 +4,48 @@ import math
 import statistics
 import time
 
-name = 'Gyro-Fenster'
-MPU6050_ADDR = 0x68
-bus=smbus2.SMBus(1)
+# name = 'Gyro-Fenster'
+# MPU6050_ADDR = 0x68
+# bus=smbus2.SMBus(1)
 
-# Register-Adressen
-PWR_MGMT_1   = 0x6B
-ACCEL_XOUT_H = 0x3B
-GYRO_XOUT_H  = 0x43
-TEMP_OUT_H   = 0x41
+# # Register-Adressen
+# PWR_MGMT_1   = 0x6B
+# ACCEL_XOUT_H = 0x3B
+# GYRO_XOUT_H  = 0x43
+# TEMP_OUT_H   = 0x41
 
-def start_up(nummer):
-        # Sensor aktivieren
-        bus.write_byte_data(MPU6050_ADDR, PWR_MGMT_1, 0) 
-        status='OFF'
-        error=1
-        who_am_i = bus.read_byte_data(MPU6050_ADDR, 0x75)
-        if who_am_i == MPU6050_ADDR:
-             status ='ON'
-             error=0
-        return name,status,error,MPU6050_ADDR,nummer
+# def start_up(nummer):
+#         # Sensor aktivieren
+#         bus.write_byte_data(MPU6050_ADDR, PWR_MGMT_1, 0) 
+#         status='OFF'
+#         error=1
+#         who_am_i = bus.read_byte_data(MPU6050_ADDR, 0x75)
+#         if who_am_i == MPU6050_ADDR:
+#              status ='ON'
+#              error=0
+#         return name,status,error,MPU6050_ADDR,nummer
 
-def read_word(bus, addr, reg):
-    high = bus.read_byte_data(addr, reg)
-    low = bus.read_byte_data(addr, reg + 1)
-    value = (high << 8) + low
-    if value >= 0x8000:
-        value = -((65535 - value) + 1)
-    return value
+# def read_word(bus, addr, reg):
+#     high = bus.read_byte_data(addr, reg)
+#     low = bus.read_byte_data(addr, reg + 1)
+#     value = (high << 8) + low
+#     if value >= 0x8000:
+#         value = -((65535 - value) + 1)
+#     return value
 
-def get_sensor_data():
-    accel_x = read_word(bus, MPU6050_ADDR, ACCEL_XOUT_H)/ 16384.0
-    accel_y = read_word(bus, MPU6050_ADDR, ACCEL_XOUT_H + 2)/ 16384.0
-    accel_z = read_word(bus, MPU6050_ADDR, ACCEL_XOUT_H + 4)/ 16384.0
+# def get_sensor_data():
+#     accel_x = read_word(bus, MPU6050_ADDR, ACCEL_XOUT_H)/ 16384.0
+#     accel_y = read_word(bus, MPU6050_ADDR, ACCEL_XOUT_H + 2)/ 16384.0
+#     accel_z = read_word(bus, MPU6050_ADDR, ACCEL_XOUT_H + 4)/ 16384.0
     
-    temp_raw = read_word(bus, MPU6050_ADDR, TEMP_OUT_H)
-    temperature = temp_raw / 340.0 + 36.53
+#     temp_raw = read_word(bus, MPU6050_ADDR, TEMP_OUT_H)
+#     temperature = temp_raw / 340.0 + 36.53
     
-    gyro_x = read_word(bus, MPU6050_ADDR, GYRO_XOUT_H)/ 131.0
-    gyro_y = read_word(bus, MPU6050_ADDR, GYRO_XOUT_H + 2)/ 131.0
-    gyro_z = read_word(bus, MPU6050_ADDR, GYRO_XOUT_H + 4)/ 131.0
+#     gyro_x = read_word(bus, MPU6050_ADDR, GYRO_XOUT_H)/ 131.0
+#     gyro_y = read_word(bus, MPU6050_ADDR, GYRO_XOUT_H + 2)/ 131.0
+#     gyro_z = read_word(bus, MPU6050_ADDR, GYRO_XOUT_H + 4)/ 131.0
     
-    return accel_x,accel_y,accel_z,gyro_x,gyro_y,gyro_z,temperature
+#     return accel_x,accel_y,accel_z,gyro_x,gyro_y,gyro_z,temperature
 
 
 def get_tilt_angle(x_ref, y_ref, z_ref, x, y, z):
@@ -69,16 +69,16 @@ def get_tilt_angle(x_ref, y_ref, z_ref, x, y, z):
     return angle_deg
 
 
-def test_messure():
+def test_messure(sensor):
     try:
-        sensor = mpu6050(0x68)
         accelerometer_data = sensor.get_accel_data()
         temp = sensor.get_temp()
         gyro_data = sensor.get_gyro_data()
     except Exception as e:
-        print(f"Error reading gyro sensor data: {e}")
-        redo = test_messure()
-        return redo
+        # print(f"Error reading gyro sensor data: {e}")
+        # redo = test_messure()
+        return None, None, None
+
     return accelerometer_data, gyro_data, temp
 
 
@@ -117,7 +117,7 @@ def get_open_angle(anglespeed, open_angle, last_time):
     # Calculate the change in angle (in degrees) using the gyroscope's Z axis (c)
     # Gyroscope values are in degrees per second, so multiply by delta_t to get degrees
     delta_angle = anglespeed * delta_t
-    if abs(delta_angle) < 1:
+    if abs(delta_angle) < 0.05:
         delta_angle = 0.0  # Ignore small changes to reduce drift
     open_angle += delta_angle
     last_time = time.time()
@@ -128,6 +128,9 @@ if __name__ == "__main__":
     import filterpy
     import filterpy.kalman as kf
     import numpy as np
+    from software.utils import error_handler
+
+    ##### init funciton
     last_time = time.time()
     sensor = mpu6050(0x68)
     x_ref, y_ref, z_ref, a_off, b_off, c_off = calibrate_gyro(sensor)
@@ -135,8 +138,10 @@ if __name__ == "__main__":
     a_angle, b_angle, c_angle = 0.0, 0.0, 0.0
     a_time, b_time, c_time = last_time, last_time, last_time
     v_ref = [x_ref, y_ref, z_ref]
+    #########
+
     while True:
-        data, gyro, temp=test_messure()
+        data, gyro, temp=test_messure(sensor)
 
         # print("Beschleunigung X:", data['x'])
         # print("Beschleunigung Y:", data['y'])
@@ -146,44 +151,53 @@ if __name__ == "__main__":
         # print("Gyroskop Z:", gyro['z']-c_off)
         #print("Temperatur:", temp)
         
-        x, y, z = data['x'], data['y'], data['z']
+        #x, y, z = data['x'], data['y'], data['z']
         x_sum, y_sum, z_sum, a_sum, b_sum, c_sum = [], [], [], [], [], []
-        steps = 100
+        steps = 10
+        test_time = time.time()
         for i in range(steps):
-            data, gyro, temp=test_messure()
-            x_sum.append(x)
-            y_sum.append(y)
-            z_sum.append(z)
-            a_angle, a_time = get_open_angle(gyro['x']-a_off,a_angle, a_time)
+            #data, gyro, temp=test_messure(sensor)
+            gyro = error_handler(sensor.get_gyro_data, [], sensor.get_gyro_data, error_retries=60, error_delay=0.5)
+            #data = error_handler(sensor.get_accel_data, [], sensor.get_accel_data, error_retries=60, error_delay=0.5)
+            #x_sum.append(x)
+            #y_sum.append(y)
+            #z_sum.append(z)
+            #a_angle, a_time = get_open_angle(gyro['x']-a_off,a_angle, a_time)
             b_angle, b_time = get_open_angle(gyro['y']-b_off,b_angle, b_time)
-            c_angle, c_time = get_open_angle(gyro['z']-c_off,c_angle, c_time)
-            a_sum.append(a_angle)
+            #c_angle, c_time = get_open_angle(gyro['z']-c_off,c_angle, c_time)
+            #a_sum.append(a_angle)
             b_sum.append(b_angle)
-            c_sum.append(c_angle)
-            time.sleep(1/steps)
-        
-        x = statistics.median(x_sum)
-        y = statistics.median(y_sum)
-        z = statistics.median(z_sum)
-        a = statistics.median(a_sum)
+            #c_sum.append(c_angle)
+            #time.sleep(1/steps)
+        print(f"Time for {steps} steps: {time.time() - test_time:.2f} seconds")
+        #x = statistics.median(x_sum)
+        #y = statistics.median(y_sum)
+        #z = statistics.median(z_sum)
+        #a = statistics.median(a_sum)
         b = statistics.median(b_sum)
-        c = statistics.median(c_sum)
+        #c = statistics.median(c_sum)
 
 
-        print(f"Accelerometer X: {x-x_ref:.2f}, Y: {y-y_ref:.2f}, Z: {z-z_ref:.2f}")
-        print(f"Gyroscope angles X: {a:.2f}, Y: {b:.2f}, Z: {c:.2f}")
+        #print(f"Accelerometer X: {x-x_ref:.2f}, Y: {y-y_ref:.2f}, Z: {z-z_ref:.2f}")
+        #print(f"Gyroscope angles X: {a:.2f}, Y: {b:.2f}, Z: {c:.2f}")
         
 
-        angle = get_tilt_angle(x_ref, y_ref, z_ref, x, y, z, )
+        #angle = get_tilt_angle(x_ref, y_ref, z_ref, x, y, z)
         # open_angle, last_time = get_open_angle(a,b,c,open_angle, last_time)
-        print(f"Open angle a: {a:.2f}°")
-        print(f"Open angle c: {c:.2f}°")
+        #print(f"Open angle a: {a:.2f}°")
+        #print(f"Open angle c: {c:.2f}°")
         print(f"Open angle: {b:.2f}°")
-        print(f"Tilt angle: {angle:.2f}°")
+        #print(f"Tilt angle: {angle:.2f}°")
 
 
         # tilt angle works really well
+        # maybe implement a rolling mean or median to reduce noise within a timestep
+
+
         # open angle does suffer alot from drift
-        # open angle is not reliable but seems to work for now
-        # try kalman filer
+        # open angle is not reliable but calculation is fine
+
+
+
+        # put vdd pin into AD0 pin for address 0x69
 

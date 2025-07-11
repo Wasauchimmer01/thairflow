@@ -1,59 +1,28 @@
-import smbus2 
-
-name='SDP810'
-SDP810_ADDR = 0x25
-bus=smbus2.SMBus(1)
-
-def start_up(nummer):
-        status='ON'
-        error=0
-        who_am_i = bus.read_byte_data(SDP810_ADDR, 0x75)
-        if who_am_i != SDP810_ADDR:
-             status ='OFF'
-             error=1
-        return name,status,error,SDP810_ADDR,nummer
-
-def read_sdp610(bus):
-    try:
-        # Lese 2 Bytes vom Sensor
-        data = bus.read_i2c_block_data(SDP810_ADDR, 0xF1, 2)  # 0xF1 = Read Pressure Command
-        raw_pressure = (data[0] << 8) | data[1]
-
-        # Werte sind als signed integer
-        if raw_pressure >= 32768:
-            raw_pressure -= 65536
-
-        # Umrechnung laut Sensirion-Datenblatt (bei SDP610-500Pa)
-        pressure_pa = raw_pressure * 60.0 / 16384.0  # Umrechnung in Pascal
-
-        return pressure_pa
-
-    except Exception as e:
-        return None
-
-def Drucksensor():
-    pressure = read_sdp610(bus)
-    if pressure is not None:
-        return pressure
-
-
-#################################################
 import time
-import argparse
 from sensirion_i2c_driver.linux_i2c_transceiver import LinuxI2cTransceiver
 from sensirion_i2c_driver import I2cConnection
 from sensirion_i2c_sdp import SdpI2cDevice
 from sensirion_driver_adapters.i2c_adapter.i2c_channel import I2cChannel
-from software.utils import get_args
+from software.utils import get_args, error_handler
+import statistics
 
-def read_measurements(sensor):
+
+def read_measurements(sensor, error_retries=60, error_delay=0.5):
+    for attempt in range(error_retries):
+        try:
+            differential_pressure, temperature = sensor.read_measurement()
+            return differential_pressure, temperature
+        except Exception as e:
+            print(f"Error reading measurement (attempt {attempt + 1}): {e}")
+            time.sleep(error_delay)
+    print("All attempts failed.")
+    print("trying to reconnect sensor")
     try:
-        differential_pressure, temperature = sensor.read_measurement()
-        #print ("Differential Pressure: {} Pa".format(differential_pressure.pascal))
-        return differential_pressure, temperature
+        sensor.start_continuous_measurement_with_mass_flow_t_comp()
+        return read_measurements(sensor, error_retries= 5, error_delay= 1)
     except Exception as e:
-        print(f"Error reading measurement: {e}")
-        read_measurements(sensor)
+        print(f"Reconnection failed: {e}")
+        raise RuntimeError("Failed to read measurements after retries.") from e
 
 def init_sensor(i2c_port, slave_address=0x25):
     """Initialisiert den Sensor und gibt das Sensorobjekt zurück."""
@@ -83,18 +52,52 @@ def data_printout(data, show_temp=True):
         print(f"Differential Pressure: {differential_pressure.pascal} Pa" + f"Temperature: {temperature.degrees_celsius} °C")
 
 
-def test_run(slave_address=0x25):
+
+def rolling_mean(sensor, window_size, store):
+    data = read_measurements(sensor, error_retries=60, error_delay=0.5)
+    store.append(data)
+    if len(store) > window_size:
+        store.pop(0)
+    avg_pressure = sum([d[0].pascal for d in store]) / len(store)
+    return avg_pressure
+
+
+def rolling_median(sensor, window_size, store):
+    data = read_measurements(sensor, error_retries=60, error_delay=0.5)
+    store.append(data)
+    if len(store) > window_size:
+        store.pop(0)
+    avg_pressure = statistics.median([d[0].pascal for d in store])
+    return avg_pressure
     
+
+
+def test_run(slave_address=0x25):
+    global ERROR_COUNT
     args = get_args()
     sensor, i2c_transceiver = init_sensor(args.i2c_port, slave_address=slave_address)
     i= 0
+    data_save = []
+    store = []
     while True:
         try:
-            data = read_measurements(sensor)
-            i += 1
+            for _ in range(10):
+                data, _ = error_handler(sensor.read_measurement, [], sensor.start_continuous_measurement_with_mass_flow_t_comp, error_retries=60, error_delay=0.5)
+                store.append(data)
+                time.sleep(1)
+                i += 1
             print(f"Measurement {i}")
-            data_printout(data, show_temp = False)
-            time.sleep(1)
+            avg_pressure = sum([d.pascal for d in store]) / len(store)
+            print(f"Average Differential Pressure: {avg_pressure} Pa")
+            
+            #######
+            # avg = rolling_median(sensor, window_size=100, store=store)
+            # print(f"Measurement {i}")
+            # print(f"Average Differential Pressure: {avg} Pa")
+            # i += 1
+            # time.sleep(0.1)
+            # data_save.append(avg)
+            
         except KeyboardInterrupt:
             print("Measurement stopped by user.")
             break
@@ -102,5 +105,28 @@ def test_run(slave_address=0x25):
     stop_sensor(sensor, i2c_transceiver)
     print("Measurement stopped.")
 
+    # data_save = data_save[1000:]
+
+    # import matplotlib.pyplot as plt
+
+    # plt.figure(figsize=(10, 5))
+    # plt.plot(data_save, label='Average Differential Pressure (Pa)')
+    # plt.xlabel('Measurement Number')
+    # plt.ylabel('Differential Pressure (Pa)')
+    # plt.title('Differential Pressure Over Time')
+    # plt.legend()
+    # plt.grid(True)
+    # plt.show()
+    # plt.savefig("differential_pressure_median_100window.png")
+
 if __name__ == "__main__":
     test_run(slave_address=0x25)
+
+    # since the sensor is very fast, we can use a rolling window smoothing to at least whatever global time interval we want
+    # or like adapt it to the ramp up and down of the fan
+
+    # mean or median does not seem to matter (at least not for a 1000 sample window)
+
+    # 0.3Pa ~ 50m^3/h
+    # 1Pa ~ 100m^3/h
+    # 3.5Pa ~ 200m^3/h
