@@ -37,3 +37,304 @@ Motion detected at 2025-07-11 15:13:06
 #######################################changed observation time form 30 to 120 secMotion detected at 2025-07-11 15:33:36
 Motion detected at 2025-07-11 15:55:36
 Door closed, time:2025-07-11 16:58:42
+Door opened, time:2025-07-11 17:11:21
+Door closed, time:2025-07-11 17:11:38
+Door opened, time:2025-07-13 04:18:33
+Door closed, time:2025-07-13 04:18:34
+Door opened, time:2025-07-13 08:32:39
+Door closed, time:2025-07-13 08:32:40
+Door opened, time:2025-07-13 14:26:48
+Door closed, time:2025-07-13 14:26:49
+Door opened, time:2025-07-13 16:04:51
+Door closed, time:2025-07-13 16:04:52
+Door opened, time:2025-07-14 13:54:59
+Motion detected at 2025-07-14 17:17:31
+Motion detected at 2025-07-16 09:46:34
+Door closed, time:2025-07-16 10:18:34
+Motion detected at 2025-07-16 10:18:35
+Door opened, time:2025-07-16 10:18:35
+Motion detected at 2025-07-16 10:20:35
+Motion detected at 2025-07-16 10:22:35
+Motion detected at 2025-07-16 10:24:35
+Motion detected at 2025-07-16 10:26:35
+Motion detected at 2025-07-16 11:10:36
+Motion detected at 2025-07-16 15:08:42
+Motion detected at 2025-07-16 18:04:47
+Motion detected at 2025-07-18 09:59:49
+Motion detected at 2025-07-18 10:01:49
+Motion detected at 2025-07-18 10:03:49
+Motion detected at 2025-07-18 10:13:50
+Motion detected at 2025-07-18 10:21:50
+Motion detected at 2025-07-18 10:39:50
+Motion detected at 2025-07-18 10:41:50
+Motion detected at 2025-07-18 10:47:51
+Motion detected at 2025-07-18 11:03:51
+Motion detected at 2025-07-18 11:13:51
+Motion detected at 2025-07-18 11:35:52
+Motion detected at 2025-07-18 11:45:52
+Motion detected at 2025-07-18 12:01:52
+Motion detected at 2025-07-18 13:25:55
+Motion detected at 2025-07-18 13:35:55
+Motion detected at 2025-07-18 14:31:56
+Motion detected at 2025-07-18 14:33:56
+Motion detected at 2025-07-20 17:27:15
+Door closed, time:2025-07-24 13:22:32
+Door opened, time:2025-07-24 13:22:33
+Door closed, time:2025-07-24 13:22:34
+Door opened, time:2025-07-24 13:22:35
+Door closed, time:2025-07-24 13:22:39
+Door opened, time:2025-07-24 13:22:40
+Door closed, time:2025-07-24 13:22:46
+Door opened, time:2025-07-24 13:22:48
+Door closed, time:2025-07-24 13:23:05
+Door opened, time:2025-07-24 13:23:06
+Door closed, time:2025-07-24 13:35:08
+Door opened, time:2025-07-24 13:35:09
+Door closed, time:2025-07-24 13:35:17
+Door opened, time:2025-07-24 13:35:19
+Door closed, time:2025-07-24 13:35:43
+Door opened, time:2025-07-24 13:35:44
+Door closed, time:2025-07-24 13:35:50
+Door opened, time:2025-07-24 13:35:52
+Door closed, time:2025-07-24 13:35:59
+Door opened, time:2025-07-24 13:36:00
+Door closed, time:2025-07-24 13:36:02
+Door opened, time:2025-07-24 13:36:04
+Door closed, time:2025-07-24 13:36:10
+Door opened, time:2025-07-24 13:36:11
+Door closed, time:2025-07-24 13:36:17
+Door opened, time:2025-07-24 13:36:18
+Door closed, time:2025-07-24 13:36:19
+Door opened, time:2025-07-24 13:36:20
+Door closed, time:2025-07-24 13:37:24
+Door opened, time:2025-07-24 13:37:25
+Door closed, time:2025-07-24 13:37:27
+Door opened, time:2025-07-24 13:37:28
+Door closed, time:2025-07-24 13:37:44
+Door opened, time:2025-07-24 13:37:47
+Door closed, time:2025-07-24 13:37:50
+Door opened, time:2025-07-24 13:37:51
+Door closed, time:2025-07-24 13:37:58
+Door opened, time:2025-07-24 13:38:00
+Door closed, time:2025-07-24 13:38:05
+Door opened, time:2025-07-24 13:38:07
+Door closed, time:2025-07-24 13:38:12
+Door opened, time:2025-07-24 13:38:13
+Door closed, time:2025-07-24 13:38:15
+Door opened, time:2025-07-24 13:38:16
+Door closed, time:2025-07-24 13:38:18
+Door opened, time:2025-07-24 13:38:19
+Door closed, time:2025-07-24 13:38:38
+Door opened, time:2025-07-24 13:38:39
+Door closed, time:2025-07-24 13:38:48
+Door opened, time:2025-07-24 13:38:52
+Door closed, time:2025-07-24 13:38:56
+Door opened, time:2025-07-24 13:38:58
+Door closed, time:2025-07-24 13:38:59
+Door opened, time:2025-07-24 13:39:00
+Door closed, time:2025-07-24 13:39:10
+Door opened, time:2025-07-24 13:39:14
+Door closed, time:2025-07-24 13:39:19
+Door opened, time:2025-07-24 13:39:21
+Door closed, time:2025-07-24 13:39:31
+Door opened, time:2025-07-24 13:39:32
+Door closed, time:2025-07-24 13:39:39
+Door opened, time:2025-07-24 13:39:41
+Door closed, time:2025-07-24 13:41:39
+Door opened, time:2025-07-24 13:41:43
+Door closed, time:2025-07-24 13:41:45
+Door opened, time:2025-07-24 13:41:48
+Door closed, time:2025-07-24 13:49:04
+Door opened, time:2025-07-24 13:49:07
+Door closed, time:2025-07-24 13:49:08
+Door opened, time:2025-07-24 13:49:11
+Door closed, time:2025-07-24 13:49:13
+Door opened, time:2025-07-24 13:49:14
+Door closed, time:2025-07-24 13:49:34
+Door opened, time:2025-07-24 13:49:35
+Door closed, time:2025-07-24 13:49:36
+Door opened, time:2025-07-24 13:49:37
+Door closed, time:2025-07-24 13:49:38
+Door opened, time:2025-07-24 13:49:41
+Door closed, time:2025-07-24 13:49:42
+Door opened, time:2025-07-24 13:49:43
+Door closed, time:2025-07-24 13:49:47
+Door opened, time:2025-07-24 13:49:52
+Door closed, time:2025-07-24 13:49:56
+Door opened, time:2025-07-24 13:49:57
+Door closed, time:2025-07-24 13:49:59
+Door opened, time:2025-07-24 13:50:01
+Door closed, time:2025-07-24 13:53:45
+Door opened, time:2025-07-24 13:53:46
+Door closed, time:2025-07-24 13:54:47
+Door opened, time:2025-07-24 13:54:48
+Door closed, time:2025-07-24 14:27:18
+Door opened, time:2025-07-24 14:27:19
+Door closed, time:2025-07-24 14:32:45
+Door opened, time:2025-07-24 14:32:47
+Door closed, time:2025-07-24 14:32:48
+Door opened, time:2025-07-24 14:32:50
+Door closed, time:2025-07-24 14:33:09
+Door opened, time:2025-07-24 14:33:11
+Door closed, time:2025-07-24 14:51:14
+Door opened, time:2025-07-24 14:51:15
+Door closed, time:2025-07-24 14:51:18
+Door opened, time:2025-07-24 14:51:19
+Door closed, time:2025-07-24 16:19:21
+Door opened, time:2025-07-24 16:19:22
+Door closed, time:2025-07-24 16:23:08
+Door opened, time:2025-07-24 16:23:09
+Door closed, time:2025-07-24 16:42:45
+Door opened, time:2025-07-24 16:42:47
+Door closed, time:2025-07-24 16:56:40
+Door opened, time:2025-07-24 16:56:41
+Door closed, time:2025-07-24 16:56:46
+Door opened, time:2025-07-24 16:56:48
+Door closed, time:2025-07-24 17:01:41
+Door opened, time:2025-07-24 17:01:42
+Door closed, time:2025-07-24 17:07:02
+Door opened, time:2025-07-24 17:07:03
+Door closed, time:2025-07-24 17:23:03
+Door opened, time:2025-07-24 17:23:04
+Door closed, time:2025-07-24 17:23:05
+Door opened, time:2025-07-24 17:23:06
+Door closed, time:2025-07-24 17:27:19
+Door opened, time:2025-07-24 17:27:20
+Door closed, time:2025-07-24 17:27:21
+Door opened, time:2025-07-24 17:27:24
+Door closed, time:2025-07-24 17:27:25
+Door opened, time:2025-07-24 17:27:26
+Door closed, time:2025-07-24 17:28:11
+Door opened, time:2025-07-24 17:28:12
+Door closed, time:2025-07-24 17:28:13
+Door opened, time:2025-07-24 17:28:15
+Door closed, time:2025-07-24 17:28:53
+Door opened, time:2025-07-24 17:28:55
+Door closed, time:2025-07-24 17:28:56
+Door opened, time:2025-07-24 17:28:58
+Door closed, time:2025-07-24 17:29:01
+Door opened, time:2025-07-24 17:29:03
+Door closed, time:2025-07-24 17:29:38
+Door opened, time:2025-07-24 17:29:40
+Door closed, time:2025-07-24 17:29:41
+Door opened, time:2025-07-24 17:29:42
+Door closed, time:2025-07-24 17:31:38
+Door opened, time:2025-07-24 17:31:39
+Door closed, time:2025-07-24 17:31:40
+Door opened, time:2025-07-24 17:31:41
+Door closed, time:2025-07-24 17:33:25
+Door opened, time:2025-07-24 17:33:27
+Door closed, time:2025-07-24 17:33:36
+Door opened, time:2025-07-24 17:33:37
+Door closed, time:2025-07-24 17:33:52
+Door opened, time:2025-07-24 17:33:53
+Door closed, time:2025-07-24 17:43:32
+Door opened, time:2025-07-24 17:43:36
+Door closed, time:2025-07-24 17:57:18
+Door opened, time:2025-07-24 17:57:19
+Door closed, time:2025-07-24 17:57:30
+Door opened, time:2025-07-24 17:57:32
+Door closed, time:2025-07-24 17:57:33
+Door opened, time:2025-07-24 17:57:34
+Door closed, time:2025-07-24 17:57:44
+Door opened, time:2025-07-24 17:57:45
+Door closed, time:2025-07-24 17:57:49
+Door opened, time:2025-07-24 17:57:51
+Door closed, time:2025-07-24 17:57:56
+Door opened, time:2025-07-24 17:57:57
+Door closed, time:2025-07-24 17:58:10
+Door opened, time:2025-07-24 17:58:11
+Door closed, time:2025-07-24 17:58:12
+Door opened, time:2025-07-24 17:58:13
+Door closed, time:2025-07-24 17:58:29
+Door opened, time:2025-07-24 17:58:30
+Door closed, time:2025-07-24 17:58:38
+Door opened, time:2025-07-24 17:58:40
+Door closed, time:2025-07-24 17:58:41
+Door opened, time:2025-07-24 17:58:42
+Door closed, time:2025-07-24 17:59:15
+Door opened, time:2025-07-24 17:59:16
+Door closed, time:2025-07-24 17:59:19
+Door opened, time:2025-07-24 17:59:21
+Door closed, time:2025-07-24 17:59:22
+Door opened, time:2025-07-24 17:59:23
+Door closed, time:2025-07-24 17:59:25
+Door opened, time:2025-07-24 17:59:27
+Door closed, time:2025-07-24 17:59:32
+Door opened, time:2025-07-24 17:59:33
+Door closed, time:2025-07-24 18:25:54
+Door opened, time:2025-07-24 18:25:55
+Door closed, time:2025-07-24 18:25:56
+Door opened, time:2025-07-24 18:25:57
+Door closed, time:2025-07-24 18:25:59
+Door opened, time:2025-07-24 18:26:00
+Door closed, time:2025-07-24 18:26:06
+Door opened, time:2025-07-24 18:26:07
+Door closed, time:2025-07-25 08:36:26
+Door opened, time:2025-07-25 08:36:28
+Door closed, time:2025-07-25 08:36:32
+Door opened, time:2025-07-25 08:36:33
+Door closed, time:2025-07-25 08:36:47
+Door opened, time:2025-07-25 08:36:49
+Door closed, time:2025-07-25 08:37:05
+Door opened, time:2025-07-25 08:37:06
+Door closed, time:2025-07-25 08:37:20
+Door opened, time:2025-07-25 08:37:21
+Door closed, time:2025-07-25 08:37:50
+Door opened, time:2025-07-25 08:37:52
+Door closed, time:2025-07-25 08:38:13
+Door opened, time:2025-07-25 08:38:14
+Door closed, time:2025-07-25 08:47:43
+Door opened, time:2025-07-25 08:47:44
+Door closed, time:2025-07-25 08:48:34
+Door opened, time:2025-07-25 08:48:35
+Door closed, time:2025-07-25 08:49:16
+Door opened, time:2025-07-25 08:49:19
+Door closed, time:2025-07-25 08:49:44
+Door opened, time:2025-07-25 08:49:45
+Door closed, time:2025-07-25 08:51:40
+Door opened, time:2025-07-25 08:51:41
+Door closed, time:2025-07-25 08:52:17
+Door opened, time:2025-07-25 08:52:18
+Door closed, time:2025-07-25 08:52:30
+Door opened, time:2025-07-25 08:52:31
+Door closed, time:2025-07-25 08:53:51
+Door opened, time:2025-07-25 08:53:52
+Door closed, time:2025-07-25 08:54:41
+Door opened, time:2025-07-25 08:54:42
+Door closed, time:2025-07-25 09:00:25
+Door opened, time:2025-07-25 09:00:26
+Door closed, time:2025-07-25 09:02:43
+Door opened, time:2025-07-25 09:02:44
+Door closed, time:2025-07-25 09:03:14
+Door opened, time:2025-07-25 09:03:15
+Door closed, time:2025-07-25 09:04:55
+Door opened, time:2025-07-25 09:04:56
+Door closed, time:2025-07-25 09:05:02
+Door opened, time:2025-07-25 09:05:03
+Door closed, time:2025-07-25 09:07:35
+Door opened, time:2025-07-25 09:07:36
+Door closed, time:2025-07-25 09:10:46
+Door opened, time:2025-07-25 09:10:47
+Door closed, time:2025-07-25 09:11:05
+Door opened, time:2025-07-25 09:11:06
+Door closed, time:2025-07-25 09:12:34
+Door opened, time:2025-07-25 09:12:35
+Door closed, time:2025-07-25 09:14:35
+Door opened, time:2025-07-25 09:14:36
+Door closed, time:2025-07-25 09:15:07
+Door opened, time:2025-07-25 09:15:08
+Door closed, time:2025-07-25 09:15:55
+Door opened, time:2025-07-25 09:15:56
+Door closed, time:2025-07-25 09:16:13
+Door opened, time:2025-07-25 09:16:14
+Door closed, time:2025-07-25 09:18:49
+Door opened, time:2025-07-25 09:18:50
+Door closed, time:2025-07-25 09:18:51
+Door opened, time:2025-07-25 09:18:52
+Door closed, time:2025-07-25 09:20:04
+Door opened, time:2025-07-25 09:20:05
+Door closed, time:2025-07-25 09:20:07
+Door opened, time:2025-07-25 09:20:08
+Door closed, time:2025-07-25 09:20:24
+Door opened, time:2025-07-25 09:20:25

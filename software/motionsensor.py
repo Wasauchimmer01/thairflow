@@ -1,85 +1,135 @@
 import time
 import smbus2
 from ads1015 import ADS1015
+from software.utils import get_args
+import threading
 
-def setup_sensor(i2c_port=1, slave_address=0x48):
-    """Initializes the ADS1015 sensor and returns the sensor object."""
-    bus = smbus2.SMBus(i2c_port)
+class MotionSensor:
+    def __init__(self, address, test = False):
+        self.name = 'Motionsensor/Reedsensor'
+        self.values = ["Motion", "DoorOpen"]
+        self.units = ["Bool", "Bool"]
+        self.address = address
+        self.args = get_args()
+        self.i2c_port = self.args.i2c_port
+        self.ads1015 = self.setup_sensor(self.i2c_port, address)
+        self.channels = ["in0/ref", "in1/ref"]  # Define the channels you want to use
 
-    ads1015 = ADS1015(slave_address)
-    ads1015.set_mode("single")
-    ads1015.set_programmable_gain(6.144)
-    ads1015.set_sample_rate(1600)
+        self._v_occ_log = []
+        self._v_open_log = []
+        self._running = True
+        if test:
+            self._running = False
+        self._thread = threading.Thread(target=self.conti_measure, daemon=True)
+        self._thread.start()
 
-    return ads1015
     
+    def setup_sensor(self, i2c_port=1, slave_address=0x48):
+        """Initializes the ADS1015 sensor and returns the sensor object."""
+        bus = smbus2.SMBus(i2c_port)
 
-def get_values(ads1015:ADS1015, channels):
-    """Reads voltage values from the specified channels."""
-    #reference = ads1015.get_reference_voltage()
-    values = {}
+        ads1015 = ADS1015(slave_address)
+        ads1015.set_mode("single")
+        ads1015.set_programmable_gain(6.144)
+        ads1015.set_sample_rate(1600)
 
-    for channel in channels:
-        voltage = ads1015.get_voltage(channel=channel)
-        values[channel] = {
-            "voltage": voltage
-        }
+        return ads1015
+        
+    
+    def conti_measure(self):
+        while self._running:
+            for channel in self.channels:
+                voltage = self.ads1015.get_voltage(channel=channel)
+                if channel == "in0/ref":
+                    self._v_occ_log.append(voltage)
+                if channel == "in1/ref":
+                    self._v_open_log.append(voltage)
 
-    return values
 
 
-def test_output_status(values, interval=0.5, obs_time=120, on_off=False, obs_values=[], txt_output=False):
-    """Outputs the status of the sensor readings at specified intervals."""
-    num_samples = int(obs_time / interval)
-
-    for _ in range(num_samples):
-        time.sleep(interval)
-        voltage = values["in0/ref"]["voltage"]
-        obs_values.append(voltage)
-
-        if len(obs_values) > num_samples:
-            obs_values.pop(0)
-
-        if any(v > 2 for v in obs_values):
-            if not on_off:
-                on_off = True
-                print("Motion detected!")
-                if txt_output:
-                    with open("output.txt", "a") as f:
-                        f.write(f"Motion detected at {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+    def read_measurements(self):
+        """Reads voltage values from the specified channels."""
+        motion = None
+        open = None
+        if any(v > 2 for v in self._v_occ_log):
+            motion = True
         else:
-            if on_off:
-                on_off = False
-                print("No motion detected.")
-                if txt_output:
-                    with open("output.txt", "a") as f:
-                        f.write(f"No motion detected at {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
-    return on_off, obs_values
+            motion = False
+        
+        if any(v > -0.1 for v in self._v_open_log):
+            open = False
+        else:
+            open = True
+
+        self._v_occ_log = []
+        self._v_open_log = []
+
+        return motion, open
 
 
-def test_run(slave_adress):
-    sensor = setup_sensor(i2c_port=1, slave_address=slave_adress)
-    channels = ["in0/ref"]#, "in1/ref", "in2/ref"]
+    def data_printout(self, data):
+        """Prints the sensor data."""
+        motion, open = data
+        print(f"Motion:{motion}, Door Open: {open}")
 
-    print(f"Sensor initialized at address {slave_adress}.")
-    while True:
-        values = get_values(sensor, channels)
-        on_off, obs_values = test_output_status(values, interval=0.5, obs_time=120, on_off=False, obs_values=[], txt_output=True)
+    def test_output_status(self, values, interval=0.5, obs_time=120, on_off=False, obs_values=[], txt_output=False):
+        """Outputs the status of the sensor readings at specified intervals."""
+        num_samples = int(obs_time / interval)
+
+        for _ in range(num_samples):
+            time.sleep(interval)
+            voltage = values["in0/ref"]["voltage"]
+            obs_values.append(voltage)
+
+            if len(obs_values) > num_samples:
+                obs_values.pop(0)
+
+            if any(v > 2 for v in obs_values):
+                if not on_off:
+                    on_off = True
+                    print("Motion detected!")
+                    if txt_output:
+                        with open("output.txt", "a") as f:
+                            f.write(f"Motion detected at {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+            else:
+                if on_off:
+                    on_off = False
+                    print("No motion detected.")
+                    if txt_output:
+                        with open("output.txt", "a") as f:
+                            f.write(f"No motion detected at {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+        return on_off, obs_values
+
+
+    def stop_sensor(self):
+        self._running = False
+        pass
+
+    def test_run(self, slave_adress):
+        sensor = self.setup_sensor(i2c_port=1, slave_address=slave_adress)
+        channels = ["in0/ref"]#, "in1/ref", "in2/ref"]
+
+        print(f"Sensor initialized at address {slave_adress}.")
+        while True:
+            for channel in channels:
+                values = self.ads1015.get_voltage(channel)
+                on_off, obs_values = self.test_output_status(values, interval=0.5, obs_time=120, on_off=False, obs_values=[], txt_output=True)
 
 
 if __name__ == "__main__":
 
-    test_run(slave_adress=0x48)
-
-    # sensor = setup_sensor(i2c_port=1, slave_address=0x49) 
-    # while True:
-    #     try:
-    #         values = get_values(sensor, channels=["in0/ref"])
-    #         time.sleep(0.5)
-    #         print(values["in0/ref"]["voltage"])
-    #     except Exception as e:
-    #         #print(f"Error reading sensor: {e}")
-    #         time.sleep(1)
+    # ms = MotionSensor(0x48)  # Replace with the actual I2C address of your sensor
+    # ms.test_run(slave_adress=0x48)
+    address = 0x48
+    sensor = MotionSensor(address, test = True)
+    while True:
+        try:
+            value = sensor.ads1015.get_voltage("in1/ref")
+            time.sleep(0.5)
+            print(value)
+        except Exception as e:
+            print(f"Error reading sensor: {e}")
+            time.sleep(1)
 
 
     # put vdd pin into addr pin for adress 0x49

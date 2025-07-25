@@ -1,104 +1,165 @@
-import partikelsensor
-import differenzdruck_610
-import differenzdruck_810
-import formaldehyd
-import gyroskop_fenster
-import gyroskop_tuer
-import motionsensor
-import gpiozero
 from datetime import datetime
-import config
 import csv
-from time import sleep
+import time
+import subprocess
+from software.formaldehyd import SFA30Sensor
+from software.motionsensor import MotionSensor
+from software.differenzdruck_810 import SdpSensor
+from software.partikelsensor import Sen66Sensor
+from software.gyroskop_fenster import GyroSensor
 
-sensor_anzahl=7
-startline=0
-init_completed = 0 #wird 1 wenn das initialisieren abgeschlossen ist
-messdaten_counter =0 #wird bei jeder Messung erhöht
+SENSOR_MAP = {
+    "5D": SFA30Sensor,
+    "5E": SFA30Sensor,  # angenommen 0x5e
+    "48": MotionSensor,
+    "49": MotionSensor,
+    "25": SdpSensor,
+    "26": SdpSensor,
+    "68": GyroSensor,
+    "69": GyroSensor,
+    "6B": Sen66Sensor,
+}
 
-def initialisieren():
-    #Nummer nach Reihenfolge vergeben
-    # config.add_sensor(gassensor.start_up(1))
-    # config.add_sensor(formaldehyd.start_up(2))
-    fenster = gyroskop_fenster.start_up(3)
-    name,status,error,adresse,nummer = fenster
-    print("fenster", fenster)
-    config.add_sensor(name,status,error,adresse,nummer)
-    # config.add_sensor(gyroskop_tuer.start_up(4))
-    diff = differenzdruck_610.start_up(1)
-    print("diff", diff)
-    name,status,error,adresse,nummer = diff
-    config.add_sensor(name,status,error,adresse,nummer)
-    # config.add_sensor(differenzdruck_810.start_up(6))
+def get_available_sensors():
+    bus_num = '1'
+    output = subprocess.check_output(['i2cdetect', '-y', bus_num], text=True)
+    devices = []
+    for line in output.splitlines():
+        if ':' not in line:
+            continue  # Überspringe Kopfzeile
+        parts = line.split(':')[1].split()
+        for p in parts:
+            if p != '--':
+                devices.append(p.upper())
+    print(f"i2c-{bus_num}: " + ", ".join(f"0x{addr}" for addr in devices))
+
+    available_sensors = []
+    for addr in devices:
+        if addr in SENSOR_MAP:
+            sensor_class = SENSOR_MAP[addr]
+            slave_addr = int(addr, 16)
+            sensor = sensor_class(slave_addr)
+            available_sensors.append(sensor)
+
+    return available_sensors
+
+def update_log(sensor, values, log):
+    timestamp = datetime.now().isoformat()
+    for name, value in zip(sensor.values, values):
+        log[sensor.name+ "_" + str(sensor.address)][name]["data"].append(value)
+        log[sensor.name+ "_" + str(sensor.address)][name]["time"].append(timestamp)
+    return log
+
+def print_data_log(data_log):
+    for sensor_name, measurements in data_log.items():
+        print(f"Sensor: {sensor_name}")
+        for value_name, details in measurements.items():
+            print(f"  {value_name} ({details['unit']}):")
+            for t, v in zip(details["time"], details["data"]):
+                print(f"    {t}: {v}")
+        print("-" * 40)
+
+def reset_log(data_log):
+    for sensor_name in data_log:
+        for value_name in data_log[sensor_name]:
+            data_log[sensor_name][value_name]["data"].clear()
+            data_log[sensor_name][value_name]["time"].clear()
+    return data_log
 
 
-    with open('config.csv') as csvdatei:
-        csv_reader_object = csv.reader(csvdatei)
-        for row in csv_reader_object:
-            print(row)
-            if row[2]!='0':
-                #print("Initialisieren failed")
-                return 0
-            else:
-                #print('Initialisieren complete')
-                return 1
+import openpyxl
+from openpyxl import Workbook, load_workbook
 
-def messdaten_generieren():
-
-    # if gassensor.check_data==True:
-    #    gas_data = gassensor.read_measurement    
-
-    differenz_data = differenzdruck_610.read_measurement
-
-    # formaldehyd_data = formaldehyd.read_measurement
-
-    # if motionsensor.monitor_motion==True:
-    #     motion_data = True
-    # else: 
-    #     motion_data = False
-
-    # gyro_fenster_data = gyroskop_Fenster.get_sensor_data
-
-    # gyro_tuer_data = gyroskop_Tuer.get_sensor_data
-
-    # measurement_Time = datetime.now().isoformat()
-
-    # data=[measurement_Time,gas_data,formaldehyd_data,differenz_data,motion_data,gyro_fenster_data,gyro_tuer_data]
+def make_xlsx(data_log, filename="daten"):
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Sensor Data"
     
-    #xlsx_data(differenz_data)
+    # Build headers
+    sensor_row = []
+    value_row = []
+    unit_row = []
+    
+    # First column reserved for timestamps
+    sensor_row.append("")
+    value_row.append("")
+    unit_row.append("Time")
+    
+    for sensor_name, measurements in data_log.items():
+        for value_name, details in measurements.items():
+            sensor_row.append(sensor_name)
+            value_row.append(value_name)
+            unit_row.append(details["unit"])
+    
+    ws.append(sensor_row)
+    ws.append(value_row)
+    ws.append(unit_row)
+    
+    full_filename = filename+"_"+ str(datetime.now().strftime("%Y-%m-%d_%H-%M-%S")+".xlsx")
+    wb.save(full_filename)
+    print(f"Data saved to {full_filename}")
+    return full_filename
 
-def xlsx_data(data):
-    y=1
-    while y <len(data):  
-        with open('daten.xlsx', "r", newline="") as f:
-                lines = list(csv.reader(f)) 
-        # while len(lines) < (y*2):
-        #         lines.append([])
-        x =0
-        while x<len(data):    
-            lines.append (data[x])
-            with open('daten.xlsx', "w", newline="") as f:
-                writer = csv.writer(f)
-                writer.writerows(lines)
-            x=x+1
-        y=y+len(data)
-    sleep(1)
 
+def append_measurements_to_xlsx(data_log, filename):
+    wb = load_workbook(filename)
+    ws = wb.active
 
+    # Get timestamp from the first available measurement
+    first_sensor = next(iter(data_log.values()))
+    first_value = next(iter(first_sensor.values()))
+    if not first_value["time"]:
+        print("No new data to append.")
+        return
+    timestamp = first_value["time"][0]
+
+    # Build row: timestamp + all measurement values in the same column order as header
+    row = [timestamp]
+    for sensor_name, measurements in data_log.items():
+        for value_name, details in measurements.items():
+            row.append(details["data"][0] if details["data"] else "")
+
+    ws.append(row)
+    wb.save(filename)
+    print(f"Data appended to {filename}")
 
 if __name__ == "__main__":
-    info=differenzdruck_610.start_up(1)
-    print(info)
-    while True:
-    #     if init_completed!=1:
-    #         if initialisieren() == 0:
-    #             print('Initialisieren fehlgeschlagen')
-    #             break
-    #         else:
-    #             init_completed=1        
-    #             print('Initialisieren erfolgreich')
+    sensors = get_available_sensors()
+    data_log = {}
 
-        wert = messdaten_generieren()
-        messdaten_counter=messdaten_counter+1
-        print("Messdaten generiert:", wert, "Counter:", messdaten_counter)
-        sleep(1)
+    for sensor in sensors:
+        print(sensor.name, sensor.address)
+    data_log = {
+        sensor.name+ "_" + str(sensor.address): {
+            value_name: {"unit": unit, "data": [], "time": []}
+            for value_name, unit in zip(sensor.values, sensor.units)
+        }
+        for sensor in sensors
+    }
+    filename = make_xlsx(data_log)
+
+    while True:
+        now = datetime.now()
+        #print("trigger time", datetime.now().strftime("%S.%f")[:-3])
+        try:
+            for sensor in sensors:
+                try:
+                    data = sensor.read_measurements()
+                    # could use error handler
+                    data_log = update_log(sensor, data, data_log)
+                    #sensor.data_printout(data)
+                    #print(f"Sensor {sensor.name} data: {data}")
+                except Exception as e:
+                    print(f"Error reading from sensor {sensor.name}: {e}")
+            time.sleep(1 - now.microsecond / 1_000_000)
+        except KeyboardInterrupt:
+            print("Measurement stopped by user.")
+            break
+        print_data_log(data_log)
+        append_measurements_to_xlsx(data_log, filename)
+        data_log = reset_log(data_log)
+         
+
+    for sensor in sensors:
+        sensor.stop_sensor()
+        print(f"{sensor.name} stopped.")
