@@ -74,7 +74,6 @@ class GyroSensor:
     def conti_measure(self):
         while self._running:
             acc = self.sensor.get_accel_data()
-            self._acc_log.append(acc)
             gyro = self.sensor.get_gyro_data()
             self.get_open_angle(gyro['y'])
 
@@ -119,7 +118,7 @@ class GyroSensor:
         self._acc_log = []
         self._open_angle_log = []
 
-        return tilt, open_angle
+        return tilt, open_angle, 
 
     def data_printout(self, data):
         """Prints the sensor data."""
@@ -139,7 +138,7 @@ class GyroSensor:
         return accelerometer_data, gyro_data, temp
 
 
-    def calibrate_gyro(self, num_samples=100):
+    def calibrate_gyro(self, num_samples=5000):
         print("Calibrating gyroscope...this takes like 2 minutes")
         gyro_x_sum = []
         gyro_y_sum = []
@@ -157,13 +156,16 @@ class GyroSensor:
             acc_x_sum.append(acc['x'])
             acc_y_sum.append(acc['y'])
             acc_z_sum.append(acc['z'])
-            # time.sleep(0.01)
-        acc_x = statistics.median(acc_x_sum)
-        acc_y = statistics.median(acc_y_sum)
-        acc_z = statistics.median(acc_z_sum)
-        gyro_x = statistics.median(gyro_x_sum)
-        gyro_y = statistics.median(gyro_y_sum)
-        gyro_z = statistics.median(gyro_z_sum)
+        acc_x = statistics.mean(acc_x_sum)
+        acc_y = statistics.mean(acc_y_sum)
+        acc_z = statistics.mean(acc_z_sum)
+        gyro_x = statistics.mean(gyro_x_sum)
+        gyro_y = statistics.mean(gyro_y_sum)
+        gyro_z = statistics.mean(gyro_z_sum)
+
+        # reset
+        self.open_angle = 0.0
+        self.last_time = time.time()
 
         return acc_x, acc_y,acc_z,gyro_x, gyro_y, gyro_z
 
@@ -173,9 +175,9 @@ class GyroSensor:
 
         # Calculate the change in angle (in degrees) using the gyroscope's Z axis (c)
         # Gyroscope values are in degrees per second, so multiply by delta_t to get degrees
-        delta_angle = anglespeed * delta_t
-        # if abs(delta_angle) < 0.05:
-        #     delta_angle = 0.0  # Ignore small changes to reduce drift
+        delta_angle = (anglespeed- self.b_off) * delta_t
+        if abs(delta_angle) < 0.05:
+            delta_angle = 0.0  # Highpassfilter
         self.open_angle += delta_angle
         self.last_time = time.time()
 

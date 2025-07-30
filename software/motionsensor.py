@@ -3,6 +3,7 @@ import smbus2
 from ads1015 import ADS1015
 from software.utils import get_args
 import threading
+import statistics
 
 class MotionSensor:
     def __init__(self, address, test = False):
@@ -12,7 +13,8 @@ class MotionSensor:
         self.address = address
         self.args = get_args()
         self.i2c_port = self.args.i2c_port
-        self.ads1015 = self.setup_sensor(self.i2c_port, address)
+        self._ref_v = None
+        self.ads1015 = self.setup_sensor(self.i2c_port, self.address)
         self.channels = ["in0/ref", "in1/ref"]  # Define the channels you want to use
 
         self._v_occ_log = []
@@ -28,10 +30,36 @@ class MotionSensor:
         """Initializes the ADS1015 sensor and returns the sensor object."""
         bus = smbus2.SMBus(i2c_port)
 
+        max_errors = 50
+        error_count = 0
+
         ads1015 = ADS1015(slave_address)
-        ads1015.set_mode("single")
-        ads1015.set_programmable_gain(6.144)
-        ads1015.set_sample_rate(1600)
+        try:
+            ads1015.set_mode("single")
+        except Exception as e:
+            error_count += 1
+            if error_count > max_errors:
+                raise f"Sensor couldnt be setup after {max_errors} retries"
+        try:
+            ads1015.set_programmable_gain(6.144)
+        except Exception as e:
+            error_count += 1
+            if error_count > max_errors:
+                raise f"Sensor couldnt be setup after {max_errors} retries"
+        try:
+            ads1015.set_sample_rate(1600)
+        except Exception as e:
+            error_count += 1
+            if error_count > max_errors:
+                raise f"Sensor couldnt be setup after {max_errors} retries"
+        try:
+            self._ref_v = ads1015.get_reference_voltage()
+        except Exception as e:
+            error_count += 1
+            if error_count > max_errors:
+                raise f"Sensor couldnt be setup after {max_errors} retries"
+            
+        print(self._ref_v)
 
         return ads1015
         
@@ -39,11 +67,15 @@ class MotionSensor:
     def conti_measure(self):
         while self._running:
             for channel in self.channels:
-                voltage = self.ads1015.get_voltage(channel=channel)
+                try:
+                    voltage = self.ads1015.get_voltage(channel=channel)
+                except Exception as e:
+                    continue
                 if channel == "in0/ref":
                     self._v_occ_log.append(voltage)
                 if channel == "in1/ref":
                     self._v_open_log.append(voltage)
+            time.sleep(0.1)
 
 
 
@@ -51,15 +83,33 @@ class MotionSensor:
         """Reads voltage values from the specified channels."""
         motion = None
         open = None
-        if any(v > 2 for v in self._v_occ_log):
+
+        if statistics.mean(self._v_occ_log)>2.3:
             motion = True
+        elif statistics.mean(self._v_occ_log)<2:
+            motion = False
         else:
             motion = False
+            print("FOOOOOOOOOOOOOOOOOOOOOOOO")
+        # if any(v > 2.5 for v in self._v_occ_log):
+        #     motion = True
+        # else:
+        #     motion = False
         
-        if any(v > -0.1 for v in self._v_open_log):
+        # if any(v < 0.1 for v in self._v_open_log):
+        #     open = True
+        # else:
+        #     open = False
+
+        if statistics.mean(self._v_open_log)>2.3:
+            open = True
+        elif statistics.mean(self._v_open_log)<2:
             open = False
         else:
-            open = True
+            open = False
+            print("FUUUUUUUUUUUUUUUUUUUUUU")
+
+
 
         self._v_occ_log = []
         self._v_open_log = []
@@ -103,7 +153,7 @@ class MotionSensor:
 
     def stop_sensor(self):
         self._running = False
-        pass
+        self._thread.join()
 
     def test_run(self, slave_adress):
         sensor = self.setup_sensor(i2c_port=1, slave_address=slave_adress)
@@ -120,17 +170,33 @@ if __name__ == "__main__":
 
     # ms = MotionSensor(0x48)  # Replace with the actual I2C address of your sensor
     # ms.test_run(slave_adress=0x48)
-    address = 0x48
-    sensor = MotionSensor(address, test = True)
+    address = [72]
+    sensors = []
+    for a in address:
+        sensor = MotionSensor(a, test = False)
+        sensors.append(sensor)
+        #time.sleep(2)
+    
     while True:
         try:
-            value = sensor.ads1015.get_voltage("in1/ref")
-            time.sleep(0.5)
-            print(value)
-        except Exception as e:
-            print(f"Error reading sensor: {e}")
-            time.sleep(1)
+            for sensor in sensors:
+                try:
+                    value1 = sensor.ads1015.get_voltage("in0/ref")
+                    value2 = sensor.ads1015.get_voltage("in1/ref")
+                    data = sensor.read_measurements()
+                    time.sleep(1)
+                    print(value1, value2, sensor.address)
+                    print(data, sensor.address)
+                except Exception as e:
+                    print(f"Error reading sensor: {e}")
+                    time.sleep(1)
+        except KeyboardInterrupt:
+            print("Measurement stopped by user.")
+            break
 
+    for sensor in sensors:
+        sensor.stop_sensor()
+        print(f"{sensor.name} stopped.")
 
     # put vdd pin into addr pin for adress 0x49
 

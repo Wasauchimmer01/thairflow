@@ -2,6 +2,7 @@ from datetime import datetime
 import csv
 import time
 import subprocess
+from openpyxl import Workbook, load_workbook
 from software.formaldehyd import SFA30Sensor
 from software.motionsensor import MotionSensor
 from software.differenzdruck_810 import SdpSensor
@@ -67,8 +68,6 @@ def reset_log(data_log):
     return data_log
 
 
-import openpyxl
-from openpyxl import Workbook, load_workbook
 
 def make_xlsx(data_log, filename="daten"):
     wb = Workbook()
