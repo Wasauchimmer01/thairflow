@@ -75,7 +75,7 @@ class Sen66Sensor:
     def __init__(self, address):
         self.name = 'Sen66'
         self.values = ["PM1p0", "PM2p5", "PM4p0", "PM10p0", "Rh", "temp", "voc", "nox", "co2"]
-        self.units = ["mass concentration ppm", "mass concentration ppm", "mass concentration ppm", "mass concentration ppm", "%", "C", "0-500", "0-100", "ppm"]
+        self.units = ["mass concentration ppm", "mass concentration ppm", "mass concentration ppm", "mass concentration ppm", "%", "C", "0-500", "0-500", "ppm"]
         self.address = address
         self.args = get_args()
         self.i2c_port = self.args.i2c_port
@@ -100,26 +100,6 @@ class Sen66Sensor:
     def read_measurements(self):
         """Liest Messwerte in einem Intervall aus."""
         try:
-            # (
-            #     mass_concentration_pm1p0,
-            #     mass_concentration_pm2p5,
-            #     mass_concentration_pm4p0,
-            #     mass_concentration_pm10p0,
-            #     humidity,
-            #     temperature,
-            #     voc_index,
-            #     nox_index,
-            #     co2
-            # ) = sensor.read_measured_values()
-            # print(f"PM1.0: {mass_concentration_pm1p0}, "
-            #         f"PM2.5: {mass_concentration_pm2p5}, "
-            #         f"PM4.0: {mass_concentration_pm4p0}, "
-            #         f"PM10.0: {mass_concentration_pm10p0}, "
-            #         f"Humidity: {humidity}, "
-            #         f"Temperature: {temperature}, "
-            #         f"VOC Index: {voc_index}, "
-            #         f"NOx Index: {nox_index}, "
-            #         f"CO2: {co2}")
             data = self.sensor.read_measured_values()
             data = (str(d) for d in data)
             data = (float(d) for d in data)

@@ -8,6 +8,7 @@ from software.motionsensor import MotionSensor
 from software.differenzdruck_810 import SdpSensor
 from software.partikelsensor import Sen66Sensor
 from software.gyroskop_fenster import GyroSensor
+import csv
 
 SENSOR_MAP = {
     "5D": SFA30Sensor,
@@ -122,10 +123,72 @@ def append_measurements_to_xlsx(data_log, filename):
     wb.save(filename)
     print(f"Data appended to {filename}")
 
+def make_csv(data_log, filename="daten"):
+    rows = []
+    
+    # Build headers
+    sensor_row = []
+    value_row = []
+    unit_row = []
+
+    # First column reserved for timestamps
+    sensor_row.append("")
+    value_row.append("")
+    unit_row.append("Time")
+
+    for sensor_name, measurements in data_log.items():
+        for value_name, details in measurements.items():
+            sensor_row.append(sensor_name)
+            value_row.append(value_name)
+            unit_row.append(details["unit"])
+
+    rows.append(sensor_row)
+    rows.append(value_row)
+    rows.append(unit_row)
+
+    # Optional: hier könntest du auch Messwerte hinzufügen, falls vorhanden
+    # z.B. rows.append(["12:00", val1, val2, ...])
+
+    full_filename = filename + "_" + datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".csv"
+    with open(full_filename, mode='w', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file)
+        writer.writerows(rows)
+
+    print(f"Data saved to {full_filename}")
+    return full_filename
+
+def append_measurements_to_csv(data_log, filename):
+    # Falls Dateiname noch kein ".csv" hat
+    if not filename.endswith(".csv"):
+        filename += ".csv"
+
+    # Get timestamp
+    first_sensor = next(iter(data_log.values()))
+    first_value = next(iter(first_sensor.values()))
+    if not first_value["time"]:
+        print("No new data to append.")
+        return
+    timestamp = first_value["time"][0]
+
+    # Baue Datenzeile im selben Format wie in der Kopfzeile
+    row = [timestamp]
+    for sensor_name, measurements in data_log.items():
+        for value_name, details in measurements.items():
+            row.append(details["data"][0] if details["data"] else "")
+
+    # An die CSV anhängen
+    with open(filename, mode='a', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file)
+        writer.writerow(row)
+
+    print(f"Data appended to {filename}")
+
+
 if __name__ == "__main__":
     sensors = get_available_sensors()
     data_log = {}
 
+    # make data log dict
     for sensor in sensors:
         print(sensor.name, sensor.address)
     data_log = {
@@ -135,28 +198,28 @@ if __name__ == "__main__":
         }
         for sensor in sensors
     }
-    filename = make_xlsx(data_log)
+    filename_xl = make_xlsx(data_log)
+    #filename_csv = make_csv(data_log)
 
     while True:
-        now = datetime.now()
-        #print("trigger time", datetime.now().strftime("%S.%f")[:-3])
         try:
+            # used as timer to trigger reading every secound
+            now = datetime.now()
             for sensor in sensors:
                 try:
                     data = sensor.read_measurements()
                     # could use error handler
                     data_log = update_log(sensor, data, data_log)
-                    #sensor.data_printout(data)
-                    #print(f"Sensor {sensor.name} data: {data}")
                 except Exception as e:
                     print(f"Error reading from sensor {sensor.name}: {e}")
+            print_data_log(data_log)
+            append_measurements_to_xlsx(data_log, filename_xl)
+            #append_measurements_to_csv(data_log, filename_csv)
+            data_log = reset_log(data_log)
             time.sleep(1 - now.microsecond / 1_000_000)
         except KeyboardInterrupt:
             print("Measurement stopped by user.")
             break
-        print_data_log(data_log)
-        append_measurements_to_xlsx(data_log, filename)
-        data_log = reset_log(data_log)
          
 
     for sensor in sensors:

@@ -4,6 +4,53 @@ Sensor Drivers stolen from here:
 
 - Gyro: 
 
+
+## Mohammad
+
+Your job is to build a function that posts the data_log data to a host via wifi using using MQTT. At the moment the data gets posted to a .xlsx or .csv. The included files called daten show a possible output.
+Best case its callable identicly to append_measurements_to_xlsx.
+Be aware that the dict data_log changes based on what sensors are connected.
+
+## Doku
+
+I have to write the Readme at somepoint anyways so i take this as an oportunity to start this here. Just to give you a rought cheatsheet for development.
+
+The projekts aim is to build a standalone data logger for a room that measures lots of data that helps to determain a rooms airquality. 
+This is done in order to find better control srtategys for hvacs as well as beeing able to identify potential hvac issues by data analisys.
+The projekt is designed to run on a Raspberry Pi 4 with 1Gb ram and using a Patch panel to Cat5/6 (or Lan) we connect a variety of sensors. The Raspi - Sensor communication is done by I^2C.
+
+Sensors:
+- Sensirion SEN66 (Pm10,Pm5,Pm4,Pm2,Pm1,Rh,Temp,VOC,NOx,CO2)
+- Sensirion SFA30 (HCHO)
+- Sensirion SDP810 125Pa (Differential Pressure, Temp, Rh)
+- MPU0516 (Gyroscope, Accelerometer)
+- Reed switch (Connected to ADS1015 analog to I^2C transformer)
+- RCWL-6050 (High frequency motion sensor, Connected to ADS1015 analog to I^2C transformer)
+
+Not all sensors have to be connected to the system.
+Multiples of a sensortype can be connected to the system (with changed I^2C address)
+
+
+Since we plan to use 8 of these in a long term test (>7 days) symultaniosly everything has to be automated adaptivly as well as able to error correct/ restart and reconnect automaticly. Furthermore the installation has to be automated as far as possible.
+
+The entirety of the software runs with calling the main.py and works like this:
+
+- Check what sensors are connected
+- Start and callibrate all available sensors (Sensor classes handle there messurement style etc.)
+- Create the data_log dictionariy that contains all titels and description for each value the sensors return
+- Create a save file containing all the sensor and value information
+- Start messurment loop
+- For every sensor call read_measurments()
+- update_log posts the information to data_log dict
+- data gets appended to their espactable colums in the .xlsx/.csv file
+- data_log gets reset and the loop starts over
+- if you keyboard interrupt the loop the sensors get stopped.
+
+
+
+
+
+
 ## Getting started
 
 To make it easy for you to get started with GitLab, here's a list of recommended next steps.

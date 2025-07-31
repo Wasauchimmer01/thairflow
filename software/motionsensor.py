@@ -59,8 +59,6 @@ class MotionSensor:
             if error_count > max_errors:
                 raise f"Sensor couldnt be setup after {max_errors} retries"
             
-        print(self._ref_v)
-
         return ads1015
         
     
@@ -84,30 +82,27 @@ class MotionSensor:
         motion = None
         open = None
 
-        if statistics.mean(self._v_occ_log)>2.3:
-            motion = True
-        elif statistics.mean(self._v_occ_log)<2:
-            motion = False
-        else:
-            motion = False
-            print("FOOOOOOOOOOOOOOOOOOOOOOOO")
-        # if any(v > 2.5 for v in self._v_occ_log):
-        #     motion = True
-        # else:
-        #     motion = False
-        
-        # if any(v < 0.1 for v in self._v_open_log):
-        #     open = True
-        # else:
-        #     open = False
+        # maybe add automatic high low callibration
+        high = 2.6
+        low = -0.6
+        v_occ = statistics.mean(self._v_occ_log)
+        # value smaller 0.5 -> cut closer to low
+        cut_percent =0.9
+        occ_cut = high + cut_percent * (low - high)
+        # cut damit aktuell bei -0.44
 
-        if statistics.mean(self._v_open_log)>2.3:
+        if v_occ > occ_cut:
+            # mean closer to high
+            motion = True
+        else:
+            # mean closer to low
+            motion = False
+
+        v_open =statistics.mean(self._v_open_log)
+        if abs(v_open - high) < abs(v_open - low):
             open = True
-        elif statistics.mean(self._v_open_log)<2:
-            open = False
         else:
             open = False
-            print("FUUUUUUUUUUUUUUUUUUUUUU")
 
 
 

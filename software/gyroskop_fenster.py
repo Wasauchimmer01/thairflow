@@ -74,6 +74,7 @@ class GyroSensor:
     def conti_measure(self):
         while self._running:
             acc = self.sensor.get_accel_data()
+            self._acc_log.append(acc)
             gyro = self.sensor.get_gyro_data()
             self.get_open_angle(gyro['y'])
 
@@ -96,6 +97,10 @@ class GyroSensor:
 
         # Convert to degrees
         angle_deg = math.degrees(angle_rad)
+
+        # highpassfiler
+        if abs(angle_deg) < 0.5:
+            angle_deg = 0
         return angle_deg
 
 
@@ -123,7 +128,10 @@ class GyroSensor:
     def data_printout(self, data):
         """Prints the sensor data."""
         tilt, open_angle = data
-        print(f"Tilt Angle: {tilt:.2f}° Open Angle: {open_angle:.2f}°")
+        if not tilt or not open_angle:
+            pass
+        else:
+            print(f"Tilt Angle: {tilt:.2f}° Open Angle: {open_angle:.2f}°")
 
     def test_messure(self, sensor):
         try:
@@ -176,7 +184,7 @@ class GyroSensor:
         # Calculate the change in angle (in degrees) using the gyroscope's Z axis (c)
         # Gyroscope values are in degrees per second, so multiply by delta_t to get degrees
         delta_angle = (anglespeed- self.b_off) * delta_t
-        if abs(delta_angle) < 0.05:
+        if abs(delta_angle) < 0.35:
             delta_angle = 0.0  # Highpassfilter
         self.open_angle += delta_angle
         self.last_time = time.time()
@@ -190,79 +198,15 @@ class GyroSensor:
 
 
 if __name__ == "__main__":
-    import filterpy
-    import filterpy.kalman as kf
-    import numpy as np
-    from software.utils import error_handler
-
-    ##### init funciton
-    last_time = time.time()
-    sensor = mpu6050(0x68)
-    x_ref, y_ref, z_ref, a_off, b_off, c_off = calibrate_gyro(sensor)
-    open_angle = 0.0
-    a_angle, b_angle, c_angle = 0.0, 0.0, 0.0
-    a_time, b_time, c_time = last_time, last_time, last_time
-    v_ref = [x_ref, y_ref, z_ref]
-    #########
+    gyro = GyroSensor(0x68)
 
     while True:
-        data, gyro, temp=test_messure(sensor)
-
-        # print("Beschleunigung X:", data['x'])
-        # print("Beschleunigung Y:", data['y'])
-        # print("Beschleunigung Z:", data['z'])
-        # print("Gyroskop X:", gyro['x']-a_off)
-        # print("Gyroskop Y:", gyro['y']-b_off)
-        # print("Gyroskop Z:", gyro['z']-c_off)
-        #print("Temperatur:", temp)
-        
-        #x, y, z = data['x'], data['y'], data['z']
-        x_sum, y_sum, z_sum, a_sum, b_sum, c_sum = [], [], [], [], [], []
-        steps = 10
-        test_time = time.time()
-        for i in range(steps):
-            #data, gyro, temp=test_messure(sensor)
-            gyro = error_handler(sensor.get_gyro_data, [], sensor.get_gyro_data, error_retries=60, error_delay=0.5)
-            #data = error_handler(sensor.get_accel_data, [], sensor.get_accel_data, error_retries=60, error_delay=0.5)
-            #x_sum.append(x)
-            #y_sum.append(y)
-            #z_sum.append(z)
-            #a_angle, a_time = get_open_angle(gyro['x']-a_off,a_angle, a_time)
-            b_angle, b_time = get_open_angle(gyro['y']-b_off,b_angle, b_time)
-            #c_angle, c_time = get_open_angle(gyro['z']-c_off,c_angle, c_time)
-            #a_sum.append(a_angle)
-            b_sum.append(b_angle)
-            #c_sum.append(c_angle)
-            #time.sleep(1/steps)
-        print(f"Time for {steps} steps: {time.time() - test_time:.2f} seconds")
-        #x = statistics.median(x_sum)
-        #y = statistics.median(y_sum)
-        #z = statistics.median(z_sum)
-        #a = statistics.median(a_sum)
-        b = statistics.median(b_sum)
-        #c = statistics.median(c_sum)
-
-
-        #print(f"Accelerometer X: {x-x_ref:.2f}, Y: {y-y_ref:.2f}, Z: {z-z_ref:.2f}")
-        #print(f"Gyroscope angles X: {a:.2f}, Y: {b:.2f}, Z: {c:.2f}")
-        
-
-        #angle = get_tilt_angle(x_ref, y_ref, z_ref, x, y, z)
-        # open_angle, last_time = get_open_angle(a,b,c,open_angle, last_time)
-        #print(f"Open angle a: {a:.2f}°")
-        #print(f"Open angle c: {c:.2f}°")
-        print(f"Open angle: {b:.2f}°")
-        #print(f"Tilt angle: {angle:.2f}°")
-
-
-        # tilt angle works really well
-        # maybe implement a rolling mean or median to reduce noise within a timestep
-
-
-        # open angle does suffer alot from drift
-        # open angle is not reliable but calculation is fine
+        data = gyro.read_measurements()
+        gyro.data_printout(data)
+        time.sleep(1)
+    
 
 
 
-        # put vdd pin into AD0 pin for address 0x69
+    # put vdd pin into AD0 pin for address 0x69
 
