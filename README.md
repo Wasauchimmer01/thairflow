@@ -7,9 +7,12 @@ Sensor Drivers stolen from here:
 
 ## Mohammad
 
-Your job is to build a function that posts the data_log data to a host via wifi using using MQTT. At the moment the data gets posted to a .xlsx or .csv. The included files called daten show a possible output.
-Best case its callable identicly to append_measurements_to_xlsx.
+Your job is to build a function that saves ether the data_log data or the .csv file to a host via wifi using whatever you like (e.g. mail, MQTT, etc.). At the moment the data gets posted to a .xlsx or .csv. The included files called daten show a possible output.
+If you want to post the data every measurment its best case if its callable identicly to append_measurements_to_xlsx.
 Be aware that the dict data_log changes based on what sensors are connected.
+
+If you want to send the file (for example every hour?) add the function to the while loop in main.
+I may include file separation in the future so your function has to be able to change the target file if needed.
 
 ## Doku
 

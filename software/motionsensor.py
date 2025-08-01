@@ -8,12 +8,11 @@ import statistics
 class MotionSensor:
     def __init__(self, address, test = False):
         self.name = 'Motionsensor/Reedsensor'
-        self.values = ["Motion", "DoorOpen"]
-        self.units = ["Bool", "Bool"]
+        self.values = ["Motion", "DoorOpen", "ErrorCount"]
+        self.units = ["Bool", "Bool", "0-50"]
         self.address = address
         self.args = get_args()
         self.i2c_port = self.args.i2c_port
-        self._ref_v = None
         self.ads1015 = self.setup_sensor(self.i2c_port, self.address)
         self.channels = ["in0/ref", "in1/ref"]  # Define the channels you want to use
 
@@ -24,7 +23,20 @@ class MotionSensor:
             self._running = False
         self._thread = threading.Thread(target=self.conti_measure, daemon=True)
         self._thread.start()
+        self.callibrate_sensor()
+        self._error_count = 0
 
+
+    def restart_messurement(self):
+        print(f"Sensor {self.name}, address {self.address} restarted due to high error count")
+        self.stop_sensor()
+        self.setup_sensor(slave_address=self.address)
+        self._error_count = 0
+        self._running = True
+        self._thread = threading.Thread(target=self.conti_measure, daemon=True)
+        self._thread.start()
+        self._v_occ_log = []
+        self._v_open_log = []
     
     def setup_sensor(self, i2c_port=1, slave_address=0x48):
         """Initializes the ADS1015 sensor and returns the sensor object."""
@@ -36,24 +48,8 @@ class MotionSensor:
         ads1015 = ADS1015(slave_address)
         try:
             ads1015.set_mode("single")
-        except Exception as e:
-            error_count += 1
-            if error_count > max_errors:
-                raise f"Sensor couldnt be setup after {max_errors} retries"
-        try:
             ads1015.set_programmable_gain(6.144)
-        except Exception as e:
-            error_count += 1
-            if error_count > max_errors:
-                raise f"Sensor couldnt be setup after {max_errors} retries"
-        try:
             ads1015.set_sample_rate(1600)
-        except Exception as e:
-            error_count += 1
-            if error_count > max_errors:
-                raise f"Sensor couldnt be setup after {max_errors} retries"
-        try:
-            self._ref_v = ads1015.get_reference_voltage()
         except Exception as e:
             error_count += 1
             if error_count > max_errors:
@@ -61,6 +57,24 @@ class MotionSensor:
             
         return ads1015
         
+    def callibrate_sensor(self):
+        print(f"Motion and reed sensor are getting callibrated.")
+        input("Open/Close door twice please and press Enter")
+        occ_h = 2.6
+        occ_l = -0.6
+        reed_h = 2.6
+        reed_l = -0.6
+        # !!!!only for remote test
+        if  self._v_occ_log:
+            occ_h = max(self._v_occ_log)
+            occ_l = min(self._v_occ_log)
+        if self._v_open_log:
+            reed_h = max(self._v_open_log)
+            reed_l = min(self._v_open_log)
+        self.v_high = max(occ_h,reed_h)
+        self.v_low = min(occ_l,reed_l)
+        self._v_occ_log = []
+        self._v_open_log = []
     
     def conti_measure(self):
         while self._running:
@@ -76,40 +90,47 @@ class MotionSensor:
             time.sleep(0.1)
 
 
-
     def read_measurements(self):
         """Reads voltage values from the specified channels."""
         motion = None
         open = None
 
-        # maybe add automatic high low callibration
-        high = 2.6
-        low = -0.6
-        v_occ = statistics.mean(self._v_occ_log)
+        high = 2.6#= self.v_high # = 2.6
+        low = -0.6#= self.v_low #= -0.6
         # value smaller 0.5 -> cut closer to low
         cut_percent =0.9
-        occ_cut = high + cut_percent * (low - high)
-        # cut damit aktuell bei -0.44
-
-        if v_occ > occ_cut:
-            # mean closer to high
-            motion = True
+        if len(self._v_occ_log) > 1:
+            v_occ = statistics.mean(self._v_occ_log)
+            occ_cut = high + cut_percent * (low - high)
+            # cut damit aktuell bei -0.44
+            if v_occ > occ_cut:
+                # mean closer to high
+                motion = True
+            else:
+                # mean closer to low
+                motion = False
+            self._error_count = 0
         else:
-            # mean closer to low
-            motion = False
+            self._error_count +=1
 
-        v_open =statistics.mean(self._v_open_log)
-        if abs(v_open - high) < abs(v_open - low):
-            open = True
+        if len(self._v_open_log) > 1:
+            v_open =statistics.mean(self._v_open_log)
+            if abs(v_open - high) < abs(v_open - low):
+                open = True
+            else:
+                open = False
+            self._error_count = 0
         else:
-            open = False
+            self._error_count +=1
 
-
+        if self._error_count > 50:
+            self.restart_messurement()
+            
 
         self._v_occ_log = []
         self._v_open_log = []
 
-        return motion, open
+        return motion, open, self._error_count
 
 
     def data_printout(self, data):
@@ -182,6 +203,7 @@ if __name__ == "__main__":
                     time.sleep(1)
                     print(value1, value2, sensor.address)
                     print(data, sensor.address)
+                    print("Callibration: ",sensor.v_high, sensor.v_low)
                 except Exception as e:
                     print(f"Error reading sensor: {e}")
                     time.sleep(1)

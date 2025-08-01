@@ -10,8 +10,8 @@ import threading
 class SdpSensor:
     def __init__(self, address):
         self.name = 'Differenzdrucksensor'
-        self.values = ["DifferentialPressure", "Temp"]
-        self.units = ["Pa", "C"]
+        self.values = ["DifferentialPressure", "Temp", "ErrorCount"]
+        self.units = ["Pa", "C", "0-50"]
         self.address = address
         self.args = get_args()
         self.i2c_port = self.args.i2c_port
@@ -19,10 +19,22 @@ class SdpSensor:
         
         self._dp_value_log = []
         self._temp_log = []
+        self._error_count = 0
         self._running = True
         self._thread = threading.Thread(target=self.conti_measure, daemon=True)
         self._thread.start()
 
+
+    def restart_messurement(self):
+        print(f"Sensor {self.name}, address {self.address} restarted due to high error count")
+        self.stop_sensor()
+        self.sensor, self.i2ctransceiver = self.init_sensor(self.i2c_port, self.address)
+        self._dp_value_log = []
+        self._temp_log = []
+        self._error_count = 0
+        self._running = True
+        self._thread = threading.Thread(target=self.conti_measure, daemon=True)
+        self._thread.start()
 
     def conti_measure(self):
         while self._running:
@@ -33,30 +45,19 @@ class SdpSensor:
             except Exception as e:
                 pass
     
-    def read_measurements(self, error_retries=60, error_delay=0.5):
-        # for attempt in range(error_retries):
-        #     try:
-        #         differential_pressure, temperature = self.sensor.read_measurement()
-        #         return differential_pressure, temperature
-        #     except Exception as e:
-        #         print(f"Error reading measurement (attempt {attempt + 1}): {e}")
-        #         time.sleep(error_delay)
-        # print("All attempts failed.")
-        # print("trying to reconnect sensor")
-        # try:
-        #     self.sensor.start_continuous_measurement_with_mass_flow_t_comp()
-        #     return self.read_measurements(self.sensor, error_retries= 5, error_delay= 1)
-        # except Exception as e:
-        #     print(f"Reconnection failed: {e}")
-        #     raise RuntimeError("Failed to read measurements after retries.") from e
+    def read_measurements(self):
         if self._dp_value_log:
             mean_dp = statistics.mean(self._dp_value_log)
             mean_t = statistics.mean(self._temp_log)
             self._dp_value_log = []
             self._temp_log = []
+            self._error_count = 0
         else:
             mean_dp, mean_t = None, None
-        return mean_dp, mean_t
+            self._error_count += 1
+        if self._error_count > 50:
+            self.restart_messurement()
+        return mean_dp, mean_t, self._error_count
 
     def init_sensor(self, i2c_port, slave_address=0x25):
         """Initialisiert den Sensor und gibt das Sensorobjekt zurück."""
@@ -85,7 +86,7 @@ class SdpSensor:
 
 
     def rolling_mean(self, sensor, window_size, store):
-        data = self.read_measurements(sensor, error_retries=60, error_delay=0.5)
+        data = self.read_measurements(sensor)
         store.append(data)
         if len(store) > window_size:
             store.pop(0)
@@ -94,7 +95,7 @@ class SdpSensor:
 
 
     def rolling_median(self, sensor, window_size, store):
-        data = self.read_measurements(sensor, error_retries=60, error_delay=0.5)
+        data = self.read_measurements(sensor)
         store.append(data)
         if len(store) > window_size:
             store.pop(0)

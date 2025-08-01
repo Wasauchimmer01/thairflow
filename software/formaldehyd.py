@@ -5,68 +5,17 @@ from sensirion_driver_adapters.i2c_adapter.i2c_channel import I2cChannel
 from sensirion_i2c_sfa3x.device import Sfa3xDevice
 from software.utils import get_args
 
-name = 'SFA30'
-SFA30_ADDRESS = 0x5D
-errorcode=[1,2,3,4,32,67,68,127]
-bus=smbus2.SMBus(1)
 
-# Befehl zum Starten der Messung
-CMD_START_CONTINUOUS_MEASUREMENT = [0x00, 0x10]
-
-# Befehl zum Lesen der Messwerte
-CMD_READ_MEASUREMENT = [0x03, 0x00]
-
-def start_up(nummer):
-    bus.write_i2c_block_data(SFA30_ADDRESS, CMD_START_CONTINUOUS_MEASUREMENT[0], CMD_START_CONTINUOUS_MEASUREMENT[1])
-    if get_bit-(bus.read_i2c_block_data(SFA30_ADDRESS,0xD0),0)==1:
-        status='OFF'
-        for x in errorcode:
-            if get_bit-(bus.read_i2c_block_data(SFA30_ADDRESS,0xD0),errorcode[x])==1:
-                error = x
-                break
-    time.sleep(1)
-    return name, status, error, SFA30_ADDRESS, nummer
-
-def measure():
-
-    bus.write_i2c_block_data(SFA30_ADDRESS, CMD_READ_MEASUREMENT[0])
-
-    time.sleep(0.05)
-
-    data = bus.read_i2c_block_data(SFA30_ADDRESS, CMD_READ_MEASUREMENT, 9)
-
-
-    def convert(high, low):
-        return (high << 8) | low
-
-    hcho_raw = convert(data[0],data[1])
-    temp_raw = convert(data[3],data[4])
-    hum_raw  = convert(data[6],data[7])
-
-    hcho = hcho_raw / 5.0      # ppb
-    temp = temp_raw / 200.0    # °C
-    hum  = hum_raw / 100.0     # % rel. Feuchte
-
-    return hcho, temp, hum
-
-def read_measurement():
-        hcho, temp, hum = measure()
-        return hcho, temp, hum 
-
-def get_bit(register, bit_number):
-  mask = 1 << bit_number  # Erstellt eine Bitmaske für das gewünschte Bit
-  return (register & mask) >> bit_number
-
-####################################################################
 class SFA30Sensor:
     def __init__(self, address):
         self.name = 'SFA30'
-        self.values = ["Hcho", "Rm", "Temp"]
-        self.units = ["ppb", "%", "C"]
+        self.values = ["Hcho", "Rh", "Temp", "ErrorCount"]
+        self.units = ["ppb", "%", "C", "0-50"]
         self.address = address
         self.args = get_args()
         self.i2c_port = self.args.i2c_port
         self.sensor, self.i2ctransceiver = self.init_sensor(self.i2c_port, address)
+        self._error_count = 0
 
     def init_sensor(self, i2c_port, slave_address=0x5D):
         """Initialisiert den Sensor und gibt das Sensorobjekt zurück."""
@@ -78,11 +27,17 @@ class SFA30Sensor:
         )
         sensor = Sfa3xDevice(channel)
         sensor.device_reset()
-        time.sleep(1.2)
+        time.sleep(1)
         device_marking = sensor.get_device_marking()
         print(f"device_marking: {device_marking};")
         sensor.start_continuous_measurement()
         return sensor, i2c_transceiver
+    
+    def restart_measurement(self):
+        print(f"Sensor {self.name}, address {self.address} restarted due to high error count")
+        # self.stop_sensor() # test if needed
+        self.sensor, self.i2ctransceiver = self.init_sensor(self.i2c_port, self.address)
+        self._error_count = 0
 
     def read_measurements(self):
         try:
@@ -93,11 +48,14 @@ class SFA30Sensor:
             hcho = float(hcho)
             humidity = float(humidity)
             temperature = float(temperature)
-            return hcho, humidity, temperature
+            self._error_count = 0
+            return hcho, humidity, temperature, self._error_count
         except Exception as e:
             print(f"Error reading measurement: {e}")
-            self.read_measurements(sensor)
-            # not a fan. change error handling
+            self._error_count += 1
+            if self._error_count > 50:
+                self.restart_measurement()
+            return None, None, None, self._error_count
 
 
     def data_printout(self, data, show_temp=False, show_humidity=False):

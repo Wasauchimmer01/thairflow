@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import csv
 import time
 import subprocess
@@ -9,6 +9,8 @@ from software.differenzdruck_810 import SdpSensor
 from software.partikelsensor import Sen66Sensor
 from software.gyroskop_fenster import GyroSensor
 import csv
+import os
+import shutil
 
 SENSOR_MAP = {
     "5D": SFA30Sensor,
@@ -183,10 +185,22 @@ def append_measurements_to_csv(data_log, filename):
 
     print(f"Data appended to {filename}")
 
+def make_backup_file(time, backup_intervall, filename):
+    delta_t = timedelta(hours=backup_intervall)
+    if datetime.now() - time < delta_t:
+        return time
+    else:
+        basename, extension = os.path.splitext(filename)
+        b_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        copy_name = f"{basename}_backup_{b_time}.{extension}"
+        shutil.copy(filename, copy_name)
+        return datetime.now()
+
 
 if __name__ == "__main__":
     sensors = get_available_sensors()
     data_log = {}
+    backup_intervall = 1
 
     # make data log dict
     for sensor in sensors:
@@ -201,6 +215,8 @@ if __name__ == "__main__":
     filename_xl = make_xlsx(data_log)
     #filename_csv = make_csv(data_log)
 
+    print("Measurement starts")
+    save_time = datetime.now()
     while True:
         try:
             # used as timer to trigger reading every secound
@@ -212,16 +228,17 @@ if __name__ == "__main__":
                     data_log = update_log(sensor, data, data_log)
                 except Exception as e:
                     print(f"Error reading from sensor {sensor.name}: {e}")
-            print_data_log(data_log)
+            #print_data_log(data_log)
             append_measurements_to_xlsx(data_log, filename_xl)
             #append_measurements_to_csv(data_log, filename_csv)
             data_log = reset_log(data_log)
+            save_time = make_backup_file(save_time,backup_intervall, filename_xl)
             time.sleep(1 - now.microsecond / 1_000_000)
         except KeyboardInterrupt:
             print("Measurement stopped by user.")
             break
          
-
+    
     for sensor in sensors:
         sensor.stop_sensor()
         print(f"{sensor.name} stopped.")
