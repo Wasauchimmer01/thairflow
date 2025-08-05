@@ -8,9 +8,10 @@ from software.motionsensor import MotionSensor
 from software.differenzdruck_810 import SdpSensor
 from software.partikelsensor import Sen66Sensor
 from software.gyroskop_fenster import GyroSensor
-import csv
+#import csv
 import os
 import shutil
+from software.emailer import send_report
 
 SENSOR_MAP = {
     "5D": SFA30Sensor,
@@ -214,6 +215,12 @@ if __name__ == "__main__":
     }
     filename_xl = make_xlsx(data_log)
     #filename_csv = make_csv(data_log)
+    filename_csv = "daten.csv"
+    
+    # Initialize timers
+    last_backup_time = datetime.now()
+    backup_intervall_hours = 1
+    last_email_time = datetime.now() - timedelta(minutes=59)
 
     print("Measurement starts")
     save_time = datetime.now()
@@ -231,8 +238,28 @@ if __name__ == "__main__":
             #print_data_log(data_log)
             append_measurements_to_xlsx(data_log, filename_xl)
             #append_measurements_to_csv(data_log, filename_csv)
+            append_measurements_to_csv(data_log, filename=filename_csv)  # EMAIL ADDED: keep a rolling daten.csv
             data_log = reset_log(data_log)
-            save_time = make_backup_file(save_time,backup_intervall, filename_xl)
+            
+            # Hourly backup
+            last_backup_time = make_backup_file(
+                last_backup_time,
+                backup_interval_hours,
+                filename_xl
+            )
+             # ── SEND CSV BY E-MAIL EVERY 59 MINUTES ─────────────────────────
+            if datetime.now() - last_email_time >= timedelta(minutes=59):
+                try:
+                    send_report(
+                        filepath=filename_csv,
+                        subject=f"Sensor Log {now:%Y-%m-%d %H:%M}",
+                        body="Attached is the latest sensor CSV log."
+                    )
+                    last_email_time = datetime.now()
+                    print(f"[Email] Sent daten.csv at {datetime.now():%H:%M}")
+                except Exception as e:
+                    print(f"[Email] Failed to send: {e}")
+            # save_time = make_backup_file(save_time,backup_intervall, filename_xl) experiment make sure that is 
             time.sleep(1 - now.microsecond / 1_000_000)
         except KeyboardInterrupt:
             print("Measurement stopped by user.")

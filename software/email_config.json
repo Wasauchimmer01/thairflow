@@ -1,0 +1,11 @@
+{
+  "smtp_host": "smtp.gmail.com",
+  "smtp_port": 587,
+  "use_tls": true,
+  "username": "airflowsensor01@gmail.com",
+  "password": "uqzhxdyzcadseygx",
+  "from_addr": "airflowsensor01@gmail.com",
+  "to_addrs": ["mohd.najeebchoudhary@gmail.com"],
+  "subject_template": "Sensor Log for {date}",
+  "body_template": "Attached is today's sensor CSV log file.\n\n-- Airflow Sensor System"
+}
