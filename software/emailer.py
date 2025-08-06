@@ -96,10 +96,27 @@ def send_report(
         '''
 # only for test 
 if __name__ == "__main__":
-    send_report(
-        filepath="daten.csv",
-        subject="Test from test_email.py",
-        body="Hello! Testing email feature from terminal script.",
-        # config_path default is "email_config.json" so you can omit it if yours is named that
-    )
-    print("send_report() completed.")
+    from datetime import datetime, timedelta
+    interval = 1 
+        # back‐date so first send is immediate
+    last_sent = datetime.now() - timedelta(minutes=interval)
+
+    print(f"Starting email loop: every {interval} minute(s). Ctrl+C to stop.")
+    try:
+        while True:
+            now = datetime.now()
+            if now - last_sent >= timedelta(minutes=interval):
+                try:
+                    send_report(
+                        filepath="daten.csv",
+                        subject=f"Loop Test Sensor Log {now:%Y-%m-%d %H:%M}",
+                        body="This is a looping test of the e-mail feature."
+                    )
+                    print(f"[{now:%H:%M:%S}]  Email sent")
+                    last_sent = now
+                except Exception as e:
+                    print(f"[{now:%H:%M:%S}]  Failed to send: {e}")
+            # check every second to avoid drift
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("\nEmail loop stopped by user.")
