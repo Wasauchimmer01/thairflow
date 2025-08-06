@@ -87,3 +87,19 @@ def send_report(
         server.sendmail(cfg["from_addr"], cfg["to_addrs"], msg.as_string())
     finally:
         server.quit()
+
+
+'''if __name__ == "__main__":
+    \gernerat 10 .csv File
+    for file in files
+        emailer filename subject ...
+        '''
+# only for test 
+if __name__ == "__main__":
+    send_report(
+        filepath="daten.csv",
+        subject="Test from test_email.py",
+        body="Hello! Testing email feature from terminal script.",
+        # config_path default is "email_config.json" so you can omit it if yours is named that
+    )
+    print("send_report() completed.")

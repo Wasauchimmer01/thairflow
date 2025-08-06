@@ -218,9 +218,10 @@ if __name__ == "__main__":
     filename_csv = "daten.csv"
     
     # Initialize timers
+    EMAIL_INTERVAL_MINUTES = 2
     last_backup_time = datetime.now()
     backup_intervall_hours = 1
-    last_email_time = datetime.now() - timedelta(minutes=59)
+    last_email_time = datetime.now() - timedelta(minutes=EMAIL_INTERVAL_MINUTES)
 
     print("Measurement starts")
     save_time = datetime.now()
