@@ -7,7 +7,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
 
-def load_email_config(path: str = "email_config.json") -> dict:
+def load_email_config(path: str = "config_private/email_config.json") -> dict:
     """
     Load and validate email configuration from a JSON file.
     Raises:
@@ -40,7 +40,7 @@ def send_report(
     filepath: str,
     subject: str = None,
     body: str = None,
-    config_path: str = "email_config.json"
+    config_path: str = "config_private/email_config.json"
 ) -> None:
     """
     Send an email with the specified file as attachment.
