@@ -1,3 +1,8 @@
+import pathlib
+import sys
+
+sys.path.append(str(pathlib.Path(__file__).resolve().parent.parent))
+
 import imaplib
 import email
 from email.message import Message
@@ -5,7 +10,7 @@ import time
 import os
 import logging
 
-from .config import load_imap_config
+from software.config import load_imap_config
 
 logging.basicConfig(
     level=logging.INFO,
