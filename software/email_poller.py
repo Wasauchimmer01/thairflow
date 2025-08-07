@@ -5,7 +5,7 @@ import time
 import os
 import logging
 
-from .config import load_imap_config
+from software.config import load_imap_config
 
 logging.basicConfig(
     level=logging.INFO,
