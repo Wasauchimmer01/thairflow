@@ -5,7 +5,7 @@
   "username": "airflowsensor01@gmail.com",
   "password": "uqzhxdyzcadseygx",
   "from_addr": "airflowsensor01@gmail.com",
-  "to_addrs": ["mohd.najeebchoudhary@gmail.com"],
+  "to_addrs": ["airflowsensor01@gmail.com"],
   "subject_template": "Sensor Log for {date}",
   "body_template": "Attached is today's sensor CSV log file.\n\n-- Airflow Sensor System"
 }

@@ -1,0 +1,9 @@
+{
+  "imap_host": "imap.gmail.com",
+  "imap_port": 993,
+  "use_ssl": true,
+  "username": "airflowsensor01@gmail.com",
+  "password": "uqzhxdyzcadseygx",
+  "mailbox": "INBOX",
+  "search_criteria": ["UNSEEN"]
+}

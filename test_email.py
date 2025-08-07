@@ -17,7 +17,7 @@ def main():
                 try:
                     send_report(
                         filepath="daten.csv",
-                        subject=f"Loop Test Sensor Log {now:%Y-%m-%d %H:%M}",
+                        subject=f"Rip_id 01 Sensor Log {now:%Y-%m-%d %H:%M}",
                         body="This is a looping test of the e-mail feature."
                     )
                     print(f"[{now:%H:%M:%S}]  Email sent")

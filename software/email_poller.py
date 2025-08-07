@@ -20,10 +20,45 @@ logging.basicConfig(
 logger = logging.getLogger('email_poller')
 
 
-def process_message(msg: Message) -> None:
+'''def process_message(msg: Message) -> None:
     """Placeholder for processing email messages."""
     logger.info('Processing message: %s', msg.get('Subject'))
+'''
+'''def process_message(msg: Message) -> None:
+    """Save any CSV attachments to disk."""
+    subject = msg.get('Subject', '<no subject>')
+    logger.info('Processing message: %s', subject)
 
+    for part in msg.walk():
+        filename = part.get_filename()
+        if not filename:
+            continue
+        if filename.lower().endswith('.csv'):
+            data = part.get_payload(decode=True)
+            out_path = os.path.join('downloads', filename)
+            os.makedirs('downloads', exist_ok=True)
+            with open(out_path, 'wb') as f:
+                f.write(data)
+            logger.info('Saved attachment to %s', out_path)
+'''
+
+def process_message(msg):
+    subject = msg.get('Subject', '<no subject>')
+    logger.info("Processing message: %s", subject)
+
+    # Ensure downloads folder exists
+    os.makedirs("downloads", exist_ok=True)
+
+    for part in msg.walk():
+        filename = part.get_filename()
+        if not filename or not filename.lower().endswith(".csv"):
+            continue
+
+        data = part.get_payload(decode=True)
+        path = os.path.join("downloads", filename)
+        with open(path, "wb") as f:
+            f.write(data)
+        logger.info("Saved attachment to %s", path)
 
 def poll_for_reports() -> None:
     """Continuously poll an IMAP inbox for new reports."""
