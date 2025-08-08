@@ -1,5 +1,6 @@
 import pathlib
 import sys
+import re, os
 
 sys.path.append(str(pathlib.Path(__file__).resolve().parent.parent))
 
@@ -41,7 +42,7 @@ logger = logging.getLogger('email_poller')
                 f.write(data)
             logger.info('Saved attachment to %s', out_path)
 '''
-
+''''
 def process_message(msg):
     subject = msg.get('Subject', '<no subject>')
     logger.info("Processing message: %s", subject)
@@ -58,7 +59,109 @@ def process_message(msg):
         path = os.path.join("downloads", filename)
         with open(path, "wb") as f:
             f.write(data)
-        logger.info("Saved attachment to %s", path)
+        logger.info("Saved attachment to %s", path)'''
+'''
+def process_message(msg):
+    subject = msg.get('Subject', '')
+    # 1) Extract rpi_id from subject
+    m = re.search(r'pi_id[:\s]+(\d+)', subject)
+    rpi_id = m.group(1) if m else 'unknown'
+    logger.info('Processing message: %s (rpi_id=%s)', subject, rpi_id)
+
+    # 2) Ensure downloads/ exists
+    dl_dir = os.path.join(os.getcwd(), "downloads")
+    os.makedirs(dl_dir, exist_ok=True)
+
+    # 3) Iterate parts and save CSVs
+    for part in msg.walk():
+        filename = part.get_filename()
+        if not filename or not filename.lower().endswith(".csv"):
+            continue
+
+        # Clean up any stray dots (e.g. '..csv')
+        safe_filename = filename.rstrip('.')
+        # Build output name: prepend rpi_id and timestamp from subject
+        ts_part = subject.split('for',1)[-1].split('pi_id',1)[0].strip().replace(' ','_').replace(':','-')
+        out_name = f"{rpi_id}_{ts_part}_{safe_filename}"
+        out_path = os.path.join(dl_dir, out_name)
+
+        try:
+            payload = part.get_payload(decode=True)
+            with open(out_path, "wb") as f:
+                f.write(payload)
+            logger.info("Saved attachment to %s", out_path)
+        except Exception as e:
+            logger.error("Failed to save %s: %s", out_path, e)
+'''
+'''
+def process_message(msg):
+    """
+    Save any CSV attachments to downloads/ and return a list of saved file paths.
+    """
+    saved_paths = []
+    subject = msg.get('Subject', '')
+    # extract rpi_id as before…
+    # ensure downloads/ exists…
+    for part in msg.walk():
+        filename = part.get_filename()
+        if not filename or not filename.lower().endswith(".csv"):
+            continue
+
+        # build out_path exactly as before…
+        # then write payload...
+        try:
+            payload = part.get_payload(decode=True)
+            with open(out_path, "wb") as f:
+                f.write(payload)
+            logger.info("Saved attachment to %s", out_path)
+            saved_paths.append((rpi_id, out_path))
+        except Exception as e:
+            logger.error("Failed to save %s: %s", out_path, e)
+'''
+def process_message(msg):
+    """
+    Save any CSV attachments to downloads/ and return a list of (rpi_id, filepath).
+    """
+    saved_paths = []
+
+    subject = msg.get('Subject', '')
+    # Extract rpi_id from subject
+    m = re.search(r'pi_id[:\s]+(\d+)', subject)
+    rpi_id = m.group(1) if m else 'unknown'
+    logger.info('Processing message: %s (rpi_id=%s)', subject, rpi_id)
+
+    # Ensure downloads/ exists
+    dl_dir = os.path.join(os.getcwd(), "downloads")
+    os.makedirs(dl_dir, exist_ok=True)
+
+    # Iterate parts and save CSVs
+    for part in msg.walk():
+        filename = part.get_filename()
+        if not filename or not filename.lower().endswith(".csv"):
+            continue
+
+        # Clean up stray dots, e.g. '..csv'
+        safe_filename = filename.rstrip('.')
+
+        # Build timestamp portion from subject
+        ts_part = subject.split('for', 1)[-1].split('pi_id', 1)[0].strip()
+        ts_part = ts_part.replace(' ', '_').replace(':', '-')
+
+        # Build output filename and full path
+        out_name = f"{rpi_id}_{ts_part}_{safe_filename}"
+        out_path = os.path.join(dl_dir, out_name)  # define here
+
+        try:
+            payload = part.get_payload(decode=True)
+            with open(out_path, "wb") as f:
+                f.write(payload)
+            logger.info("Saved attachment to %s", out_path)
+            saved_paths.append((rpi_id, out_path))
+        except Exception as e:
+            # out_path is in scope here
+            logger.error("Failed to save %s: %s", out_path, e)
+
+    return saved_paths
 
 def poll_for_reports() -> None:
     """Continuously poll an IMAP inbox for new reports."""
@@ -94,6 +197,42 @@ def poll_for_reports() -> None:
         if os.environ.get('EMAIL_POLLER_RUN_ONCE') == '1':
             break
         time.sleep(60)
+'''
+def poll_for_reports_once() -> list[tuple[str, str]]:
+    """
+    Run one IMAP search+fetch cycle, save CSVs, and return
+    a list of (rpi_id, filepath) for each saved attachment.
+    """
+    attachments = []
+    config = load_imap_config()
+    conn = imaplib.IMAP4_SSL(config["imap_host"], config["imap_port"])
+    conn.login(config["username"], config["password"])
+    conn.select(config["mailbox"])
+    typ, msg_ids = conn.search(None, *config["search_criteria"])
+    for msg_id in msg_ids[0].split():
+        typ, msg_data = conn.fetch(msg_id, "(RFC822)")
+        msg = email.message_from_bytes(msg_data[0][1])
+        # save_ct returns list of file paths
+        saved = process_message(msg)  # modify to return list of paths
+        attachments.extend(saved)
+        conn.store(msg_id, "+FLAGS", "\\Seen")
+    conn.logout()
+    return attachments'''
+def poll_for_reports_once() -> list[tuple[str,str]]:
+    attachments = []
+    config = load_imap_config()
+    conn = imaplib.IMAP4_SSL(config["imap_host"], config["imap_port"])
+    conn.login(config["username"], config["password"])
+    conn.select(config["mailbox"])
+    typ, msg_ids = conn.search(None, *config["search_criteria"])
+    for msg_id in msg_ids[0].split():
+        typ, msg_data = conn.fetch(msg_id, "(RFC822)")
+        msg = email.message_from_bytes(msg_data[0][1])
+        saved = process_message(msg)       # now returns list of (rpi_id, path)
+        attachments.extend(saved)          # extends the list
+        conn.store(msg_id, "+FLAGS", "\\Seen")
+    conn.logout()
+    return attachments
 
 
 if __name__ == '__main__':
