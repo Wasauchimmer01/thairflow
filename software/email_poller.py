@@ -118,7 +118,7 @@ def process_message(msg):
         except Exception as e:
             logger.error("Failed to save %s: %s", out_path, e)
 '''
-def process_message(msg):
+'''def process_message(msg):
     """
     Save any CSV attachments to downloads/ and return a list of (rpi_id, filepath).
     """
@@ -159,6 +159,49 @@ def process_message(msg):
             saved_paths.append((rpi_id, out_path))
         except Exception as e:
             # out_path is in scope here
+            logger.error("Failed to save %s: %s", out_path, e)
+
+    return saved_paths
+'''
+
+def process_message(msg):
+    """
+    Save CSV attachments to downloads/ and return a list of (rpi_id, filepath).
+    Subject format example: "Sensor Log for 2025-08-07 pi_id: 2"
+    """
+    saved_paths = []
+
+    subject = msg.get('Subject', '')
+    # Extract rpi_id from subject
+    m = re.search(r'pi_id[:\s]+(\d+)', subject)
+    rpi_id = m.group(1) if m else 'unknown'
+    logger.info('Processing message: %s (rpi_id=%s)', subject, rpi_id)
+
+    # Ensure downloads/ exists
+    dl_dir = os.path.join(os.getcwd(), "downloads")
+    os.makedirs(dl_dir, exist_ok=True)
+
+    # Timestamp chunk from subject (between 'for' and 'pi_id')
+    ts_part = subject.split('for', 1)[-1].split('pi_id', 1)[0].strip()
+    ts_part = ts_part.replace(' ', '_').replace(':', '-')
+
+    # Iterate all parts and save CSVs
+    for part in msg.walk():
+        filename = part.get_filename()
+        if not filename or not filename.lower().endswith(".csv"):
+            continue
+
+        safe_filename = filename.rstrip('.')  # handle '..csv' oddity
+        out_name = f"{rpi_id}_{ts_part}_{safe_filename}"
+        out_path = os.path.join(dl_dir, out_name)
+
+        try:
+            payload = part.get_payload(decode=True)
+            with open(out_path, "wb") as f:
+                f.write(payload)
+            logger.info("Saved attachment to %s", out_path)
+            saved_paths.append((rpi_id, out_path))
+        except Exception as e:
             logger.error("Failed to save %s: %s", out_path, e)
 
     return saved_paths
@@ -218,7 +261,7 @@ def poll_for_reports_once() -> list[tuple[str, str]]:
         conn.store(msg_id, "+FLAGS", "\\Seen")
     conn.logout()
     return attachments'''
-def poll_for_reports_once() -> list[tuple[str,str]]:
+'''def poll_for_reports_once() -> list[tuple[str,str]]:
     attachments = []
     config = load_imap_config()
     conn = imaplib.IMAP4_SSL(config["imap_host"], config["imap_port"])
@@ -232,8 +275,26 @@ def poll_for_reports_once() -> list[tuple[str,str]]:
         attachments.extend(saved)          # extends the list
         conn.store(msg_id, "+FLAGS", "\\Seen")
     conn.logout()
-    return attachments
+    return attachments'''
 
+def poll_for_reports_once() -> list[tuple[str, str]]:
+    """
+    Run one IMAP fetch cycle, save CSVs, and return a list of (rpi_id, filepath).
+    """
+    attachments: list[tuple[str, str]] = []
+    cfg = load_imap_config()
+    conn = imaplib.IMAP4_SSL(cfg["imap_host"], cfg["imap_port"])
+    conn.login(cfg["username"], cfg["password"])
+    conn.select(cfg["mailbox"])
+    typ, msg_ids = conn.search(None, *cfg["search_criteria"])
+    for msg_id in msg_ids[0].split():
+        typ, msg_data = conn.fetch(msg_id, "(RFC822)")
+        msg = email.message_from_bytes(msg_data[0][1])
+        saved = process_message(msg)             # returns list[(rpi_id, path)]
+        attachments.extend(saved)
+        conn.store(msg_id, "+FLAGS", "\\Seen")
+    conn.logout()
+    return attachments
 
 if __name__ == '__main__':
     poll_for_reports()
