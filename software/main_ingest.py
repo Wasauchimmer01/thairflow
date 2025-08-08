@@ -11,6 +11,7 @@ from software.db import (
     get_offsets_for_rp_ids,
     upsert_last_ts,
     insert_readings,
+    ensure_sensors,      # <-- FK safety
 )
 
 logging.basicConfig(
@@ -42,7 +43,7 @@ def main():
             archive(csv_path)
             continue
 
-        # 3) Bulk fetch offsets once for all rp_ids seen in this batch (usually just one)
+        # 3) Bulk fetch offsets once for all rp_ids in this file (usually just one)
         rp_ids = sorted({r["rp_id"] for r in rows})
         offsets: Dict[Tuple[int, str], datetime] = get_offsets_for_rp_ids(rp_ids)
 
@@ -55,12 +56,14 @@ def main():
             last_ts = offsets.get(key, EPOCH)
             if r["timestamp"] > last_ts:
                 new_rows.append(r)
-                # Track max timestamp per key to upsert once at the end
                 if r["timestamp"] > updated_offsets.get(key, last_ts):
                     updated_offsets[key] = r["timestamp"]
 
-        # 5) Insert in chunks to avoid huge memory/packet sizes
+        # 5) Insert in chunks; ensure FK won't fail by seeding sensors first
         if new_rows:
+            missing_ids = {r["sensor_id"] for r in new_rows}
+            ensure_sensors(missing_ids)  # <-- makes FK happy
+
             logger.info("New rows to insert: %d", len(new_rows))
             start = 0
             while start < len(new_rows):

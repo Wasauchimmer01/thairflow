@@ -3,6 +3,8 @@ import os
 import json
 import logging
 from datetime import datetime, timezone
+from typing import Dict, Tuple, List
+
 import psycopg2
 from psycopg2.extras import execute_values
 
@@ -13,6 +15,8 @@ if not logger.handlers:
         format="%(asctime)s %(levelname)-8s %(name)s %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
+
+# ---------- config / connection ----------
 
 def load_db_config(path: str = "config_private/db_config.json") -> dict:
     if not os.path.isfile(path):
@@ -27,7 +31,6 @@ def load_db_config(path: str = "config_private/db_config.json") -> dict:
 
 def get_conn():
     cfg = load_db_config()
-    # keep a small connect timeout to fail fast if unreachable
     return psycopg2.connect(
         host=cfg["host"],
         port=cfg["port"],
@@ -39,10 +42,12 @@ def get_conn():
 
 EPOCH = datetime.fromtimestamp(0, tz=timezone.utc)
 
-def get_offsets_for_rp_ids(rp_ids: list[int]) -> dict[tuple[int, str], datetime]:
+# ---------- offsets helpers ----------
+
+def get_offsets_for_rp_ids(rp_ids: List[int]) -> Dict[Tuple[int, str], datetime]:
     """
-    Return a dict {(rp_id, sensor_id): last_ts} for all rows in sensor_offsets
-    matching any rp_id in rp_ids.
+    Return {(rp_id, sensor_id): last_ts} for all rows in sensor_offsets
+    whose rp_id is in rp_ids.
     """
     if not rp_ids:
         return {}
@@ -54,14 +59,13 @@ def get_offsets_for_rp_ids(rp_ids: list[int]) -> dict[tuple[int, str], datetime]
     conn = get_conn()
     try:
         with conn.cursor() as cur:
-            # psycopg2 will adapt Python list[int] to int[]
             cur.execute(sql, (rp_ids,))
             result = {(rp, sid): ts for (rp, sid, ts) in cur.fetchall()}
         return result
     finally:
         conn.close()
 
-def upsert_last_ts(offsets: dict[tuple[int, str], datetime]) -> None:
+def upsert_last_ts(offsets: Dict[Tuple[int, str], datetime]) -> None:
     """
     Upsert sensor_offsets in bulk.
     offsets: {(rp_id, sensor_id): last_ts}
@@ -84,10 +88,38 @@ def upsert_last_ts(offsets: dict[tuple[int, str], datetime]) -> None:
     finally:
         conn.close()
 
-def insert_readings(rows: list[dict]) -> None:
+# ---------- FK safety: sensors seeding ----------
+
+def ensure_sensors(sensor_ids: set[str]) -> None:
+    """
+    Insert missing sensor ids into public.sensors so the FK on measurements passes.
+    Only inserts the sensor_id; other columns remain NULL (can be backfilled later).
+    Safe to call repeatedly; uses ON CONFLICT DO NOTHING.
+    """
+    if not sensor_ids:
+        return
+    records = [(sid,) for sid in sensor_ids]
+
+    sql = """
+        INSERT INTO sensors (sensor_id)
+        VALUES %s
+        ON CONFLICT (sensor_id) DO NOTHING
+    """
+    conn = get_conn()
+    try:
+        with conn.cursor() as cur:
+            execute_values(cur, sql, records)
+        conn.commit()
+        logger.info("Ensured %d sensor ids exist in sensors", len(records))
+    finally:
+        conn.close()
+
+# ---------- bulk insert measurements ----------
+
+def insert_readings(rows: List[dict]) -> None:
     """
     Bulk insert into measurements.
-    rows items must have keys: timestamp, rp_id, sensor_id, unit, value, value_name
+    Each row must have keys: timestamp, rp_id, sensor_id, unit, value, value_name
     """
     if not rows:
         return
