@@ -164,7 +164,7 @@ def process_message(msg):
     return saved_paths
 '''
 
-def process_message(msg):
+'''def process_message(msg):
     """
     Save CSV attachments to downloads/ and return a list of (rpi_id, filepath).
     Subject format example: "Sensor Log for 2025-08-07 pi_id: 2"
@@ -201,6 +201,44 @@ def process_message(msg):
                 f.write(payload)
             logger.info("Saved attachment to %s", out_path)
             saved_paths.append((rpi_id, out_path))
+        except Exception as e:
+            logger.error("Failed to save %s: %s", out_path, e)
+
+    return saved_paths'''
+
+def process_message(msg):
+    """
+    Save CSV attachments to downloads/ and return a list of (rp_id:int, filepath).
+    Subject format: "Sensor Log for 2025-08-07 pi_id: 2"
+    """
+    saved_paths = []
+
+    subject = msg.get('Subject', '')
+    m = re.search(r'pi_id[:\s]+(\d+)', subject)
+    rp_id = int(m.group(1)) if m else -1
+    logger.info('Processing message: %s (rp_id=%s)', subject, rp_id)
+
+    dl_dir = os.path.join(os.getcwd(), "downloads")
+    os.makedirs(dl_dir, exist_ok=True)
+
+    ts_part = subject.split('for', 1)[-1].split('pi_id', 1)[0].strip()
+    ts_part = ts_part.replace(' ', '_').replace(':', '-')
+
+    for part in msg.walk():
+        filename = part.get_filename()
+        if not filename or not filename.lower().endswith(".csv"):
+            continue
+
+        safe_filename = filename.rstrip('.')
+        out_name = f"{rp_id}_{ts_part}_{safe_filename}"
+        out_path = os.path.join(dl_dir, out_name)
+
+        try:
+            payload = part.get_payload(decode=True)
+            with open(out_path, "wb") as f:
+                f.write(payload)
+            logger.info("Saved attachment to %s", out_path)
+            saved_paths.append((rp_id, out_path))  # rp_id is INT now
         except Exception as e:
             logger.error("Failed to save %s: %s", out_path, e)
 

@@ -1,11 +1,11 @@
+# software/db.py
+import os
+import json
+import logging
+from datetime import datetime, timezone
 import psycopg2
 from psycopg2.extras import execute_values
-import logging
-import json
-import os
-from datetime import datetime
 
-# ── Logging ──────────────────────────────────────────────────────────────
 logger = logging.getLogger("db")
 if not logger.handlers:
     logging.basicConfig(
@@ -14,74 +14,66 @@ if not logger.handlers:
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
-# ── Config loader ────────────────────────────────────────────────────────
 def load_db_config(path: str = "config_private/db_config.json") -> dict:
-    """
-    Load database configuration JSON with keys:
-    host, port, database, user, password
-    """
     if not os.path.isfile(path):
         raise FileNotFoundError(f"DB config file not found: {path}")
     with open(path, "r", encoding="utf-8") as f:
         cfg = json.load(f)
-
     required = ["host", "port", "database", "user", "password"]
     missing = [k for k in required if k not in cfg]
     if missing:
         raise KeyError(f"Missing required DB config keys: {missing}")
-
     return cfg
 
-# ── Connection helper ───────────────────────────────────────────────────
 def get_conn():
     cfg = load_db_config()
+    # keep a small connect timeout to fail fast if unreachable
     return psycopg2.connect(
         host=cfg["host"],
         port=cfg["port"],
         dbname=cfg["database"],
         user=cfg["user"],
         password=cfg["password"],
+        connect_timeout=cfg.get("connect_timeout", 10),
     )
 
-# ── Offsets API ─────────────────────────────────────────────────────────
-def get_last_ts(rpi_id: str, sensor_id: str) -> datetime:
+EPOCH = datetime.fromtimestamp(0, tz=timezone.utc)
+
+def get_offsets_for_rp_ids(rp_ids: list[int]) -> dict[tuple[int, str], datetime]:
     """
-    Return last_ts for (rpi_id, sensor_id) from sensor_offsets,
-    or epoch if no row exists yet.
+    Return a dict {(rp_id, sensor_id): last_ts} for all rows in sensor_offsets
+    matching any rp_id in rp_ids.
     """
+    if not rp_ids:
+        return {}
     sql = """
-        SELECT last_ts
+        SELECT rp_id, sensor_id, last_ts
           FROM sensor_offsets
-         WHERE rpi_id = %s AND sensor_id = %s
+         WHERE rp_id = ANY(%s)
     """
     conn = get_conn()
     try:
         with conn.cursor() as cur:
-            cur.execute(sql, (rpi_id, sensor_id))
-            row = cur.fetchone()
-            if row:
-                return row[0]
-            return datetime.fromtimestamp(0)
+            # psycopg2 will adapt Python list[int] to int[]
+            cur.execute(sql, (rp_ids,))
+            result = {(rp, sid): ts for (rp, sid, ts) in cur.fetchall()}
+        return result
     finally:
         conn.close()
 
-def upsert_last_ts(offsets: dict):
+def upsert_last_ts(offsets: dict[tuple[int, str], datetime]) -> None:
     """
-    Bulk upsert last_ts values into sensor_offsets.
-    offsets: dict { (rpi_id, sensor_id): datetime }
+    Upsert sensor_offsets in bulk.
+    offsets: {(rp_id, sensor_id): last_ts}
     """
     if not offsets:
         return
-
-    records = [
-        (rpi_id, sensor_id, ts)
-        for (rpi_id, sensor_id), ts in offsets.items()
-    ]
+    records = [(rp, sid, ts) for (rp, sid), ts in offsets.items()]
     sql = """
-    INSERT INTO sensor_offsets (rpi_id, sensor_id, last_ts)
-    VALUES %s
-    ON CONFLICT (rpi_id, sensor_id)
-      DO UPDATE SET last_ts = EXCLUDED.last_ts
+        INSERT INTO sensor_offsets (rp_id, sensor_id, last_ts)
+        VALUES %s
+        ON CONFLICT (rp_id, sensor_id)
+          DO UPDATE SET last_ts = EXCLUDED.last_ts
     """
     conn = get_conn()
     try:
@@ -92,38 +84,27 @@ def upsert_last_ts(offsets: dict):
     finally:
         conn.close()
 
-# ── Readings insert ─────────────────────────────────────────────────────
-def insert_readings(rows: list):
+def insert_readings(rows: list[dict]) -> None:
     """
-    Bulk insert sensor reading rows into sensor_readings.
-    Each dict in rows must have keys:
-      rpi_id, sensor_id, ts, value_num, value_bool, unit
+    Bulk insert into measurements.
+    rows items must have keys: timestamp, rp_id, sensor_id, unit, value, value_name
     """
     if not rows:
         return
-
     sql = """
-    INSERT INTO sensor_readings
-      (rpi_id, sensor_id, ts, value, value_bool, unit)
-    VALUES %s
-    ON CONFLICT DO NOTHING
+        INSERT INTO measurements
+          ("timestamp", rp_id, sensor_id, unit, value, value_name)
+        VALUES %s
     """
     records = [
-        (
-            row["rpi_id"],
-            row["sensor_id"],
-            row["ts"],
-            row.get("value_num"),
-            row.get("value_bool"),
-            row["unit"],
-        )
-        for row in rows
+        (r["timestamp"], r["rp_id"], r["sensor_id"], r["unit"], r["value"], r["value_name"])
+        for r in rows
     ]
     conn = get_conn()
     try:
         with conn.cursor() as cur:
             execute_values(cur, sql, records)
         conn.commit()
-        logger.info("Inserted %d readings", len(records))
+        logger.info("Inserted %d measurements", len(records))
     finally:
         conn.close()

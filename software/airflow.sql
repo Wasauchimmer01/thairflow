@@ -1,37 +1,11 @@
--- Which database am I on?
-SELECT current_database();
+SELECT COUNT(*) FROM public.measurements;
 
--- Do the tables exist?
-SELECT table_name
-FROM information_schema.tables
-WHERE table_schema = 'public'
-  AND table_name IN ('sensor_readings', 'sensor_offsets');
+SELECT rp_id, sensor_id,
+       MIN("timestamp") AS first_ts,
+       MAX("timestamp") AS last_ts,
+       COUNT(*) AS rows
+FROM public.measurements
+GROUP BY rp_id, sensor_id
+ORDER BY rp_id, sensor_id;
 
--- Peek at the columns
-SELECT column_name, data_type, is_nullable
-FROM information_schema.columns
-WHERE table_name = 'sensor_readings'
-ORDER BY ordinal_position;
-
-SELECT column_name, data_type, is_nullable
-FROM information_schema.columns
-WHERE table_name = 'sensor_offsets'
-ORDER BY ordinal_position;
-
--- which DB am I in?
-SELECT current_database();
-
--- list our two tables
-SELECT table_name
-FROM information_schema.tables
-WHERE table_schema='public'
-  AND table_name IN ('sensor_readings','sensor_offsets');
-
--- describe sensor_offsets
-SELECT column_name, data_type, is_nullable
-FROM information_schema.columns
-WHERE table_name='sensor_offsets'
-ORDER BY ordinal_position;
-
--- show search_path (just in case)
-SHOW search_path;
+SELECT * FROM public.sensor_offsets ORDER BY rp_id, sensor_id LIMIT 20;

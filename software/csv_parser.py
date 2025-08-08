@@ -1,91 +1,88 @@
 import csv
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 
 logger = logging.getLogger("csv_parser")
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s %(levelname)-8s %(name)s %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
+if not logger.handlers:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)-8s %(name)s %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
 
-def parse_csv(rpi_id: str, filepath: str):
+def parse_csv(rp_id: int, filepath: str):
     """
-    Parse a sensor CSV file into a list of reading dicts.
+    Parse a sensor CSV file and return rows ready for the 'measurements' table.
 
-    Args:
-        rpi_id (str): Identifier for the Raspberry Pi source.
-        filepath (str): Path to the CSV file.
-
-    Returns:
-        List[dict]: Each dict has keys:
-            rpi_id, sensor_id, ts, measurement, unit, value_num, value_bool
+    Returns a list of dicts with keys:
+      rp_id:int, sensor_id:str (sensor.measurement), timestamp:aware-datetime (UTC),
+      unit:str, value:float, value_name:Optional[str]
     """
     if not os.path.isfile(filepath):
         logger.error("CSV file not found: %s", filepath)
         return []
 
     rows = []
-    with open(filepath, newline='') as csvfile:
+    with open(filepath, newline="") as csvfile:
         reader = csv.reader(csvfile)
         try:
-            header1 = next(reader)
-            header2 = next(reader)
-            header3 = next(reader)
+            header1 = next(reader)  # sensor ids
+            header2 = next(reader)  # measurement names
+            header3 = next(reader)  # units
         except StopIteration:
             logger.error("CSV %s has insufficient header rows", filepath)
             return []
 
-        # Build column descriptors for indices > 0
-        cols = []  # list of tuples (sensor_id, measurement, unit)
+        # Build descriptors for measurement columns (index > 0)
+        cols = []
         for i in range(len(header1)):
             if i == 0:
                 cols.append((None, None, None))
             else:
-                sensor = header1[i]
-                meas   = header2[i]
-                unit   = header3[i]
-                cols.append((sensor, meas, unit))
+                cols.append((header1[i], header2[i], header3[i]))
 
-        # Parse data rows
         for row in reader:
             if not row or len(row) < 2:
                 continue
+            # CSV timestamp assumed ISO without TZ; treat as UTC
             try:
-                ts = datetime.fromisoformat(row[0])
+                ts = datetime.fromisoformat(row[0]).replace(tzinfo=timezone.utc)
             except Exception as e:
                 logger.error("Invalid timestamp %s in %s: %s", row[0], filepath, e)
                 continue
 
-            # For each measurement column
             for i in range(1, len(row)):
-                sensor_id, measurement, unit = cols[i]
-                if not sensor_id:
+                sensor, meas, unit = cols[i]
+                if not sensor:
                     continue
                 raw = row[i].strip()
                 if raw == "":
                     continue
 
-                value_num = None
-                value_bool = None
-                if unit.lower() == "bool":
-                    value_bool = raw.lower() in ("true", "1", "yes")
-                else:
-                    try:
-                        value_num = float(raw)
-                    except ValueError:
-                        logger.error("Non-numeric value %s for %s in %s", raw, sensor_id, filepath)
-                        continue
+                # Combine sensor + measurement
+                sensor_key = f"{sensor}.{meas}"
+
+                # Convert to numeric and carry label for booleans
+                value_name = None
+                try:
+                    if unit.lower() == "bool":
+                        v_bool = raw.lower() in ("true", "1", "yes")
+                        value = 1.0 if v_bool else 0.0
+                        value_name = "True" if v_bool else "False"
+                    else:
+                        value = float(raw)
+                except ValueError:
+                    logger.error("Non-numeric value %s for %s in %s", raw, sensor_key, filepath)
+                    continue
 
                 rows.append({
-                    "rpi_id": rpi_id,
-                    "sensor_id": sensor_id,
-                    "ts": ts,
-                    "measurement": measurement,
+                    "rp_id": int(rp_id),
+                    "sensor_id": sensor_key,
+                    "timestamp": ts,
                     "unit": unit,
-                    "value_num": value_num,
-                    "value_bool": value_bool
+                    "value": value,
+                    "value_name": value_name
                 })
 
     logger.info("Parsed %d readings from %s", len(rows), filepath)
@@ -95,13 +92,12 @@ def parse_csv(rpi_id: str, filepath: str):
 if __name__ == "__main__":
     import sys
     if len(sys.argv) != 3:
-        print("Usage: python -m software.csv_parser <rpi_id> <csv_file_path>")
+        print("Usage: python -m software.csv_parser <rp_id> <csv_file_path>")
         sys.exit(1)
 
-    rpi_id = sys.argv[1]
+    rp_id = int(sys.argv[1])
     path = sys.argv[2]
-    parsed = parse_csv(rpi_id, path)
+    parsed = parse_csv(rp_id, path)
     print(f"Parsed {len(parsed)} readings from {path}")
-    # Print first few rows as sample
     for entry in parsed[:5]:
         print(entry)
