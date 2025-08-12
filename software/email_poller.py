@@ -77,8 +77,12 @@ def poll_for_reports_once(max_per_cycle: int | None = None) -> list[tuple[int, s
     conn = None
     try:
         logger.info('Connecting to %s:%s', cfg["imap_host"], cfg["imap_port"])
-        conn = imaplib.IMAP4_SSL(cfg["imap_host"], cfg["imap_port"])
-        conn.login(cfg["username"], cfg["password"])
+        try:
+            conn = imaplib.IMAP4_SSL(cfg["imap_host"], cfg["imap_port"])
+            conn.login(cfg["username"], cfg["password"])
+        except (OSError, imaplib.IMAP4.error):
+            logger.warning("No internet connection – unable to poll emails")
+            return attachments
         logger.info('Logged in as %s', cfg["username"])
 
         conn.select(cfg["mailbox"])
