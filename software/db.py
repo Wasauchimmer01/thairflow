@@ -151,3 +151,29 @@ def insert_readings(rows: List[dict]) -> None:
         logger.info("Inserted %d measurements", len(records))
     finally:
         conn.close()
+
+
+# ---------- processed files logging ----------
+
+def log_processed_file(archive_path: str, ingestion_date: datetime) -> None:
+    """Record a processed file and when it was ingested.
+
+    Parameters
+    ----------
+    archive_path: str
+        Final archive location of the file.
+    ingestion_date: datetime
+        When the file was ingested.
+    """
+
+    sql = (
+        "INSERT INTO processed_files (archive_path, ingestion_date) VALUES (%s, %s)"
+    )
+    conn = get_conn()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(sql, (archive_path, ingestion_date))
+        conn.commit()
+        logger.info("Logged processed file %s", archive_path)
+    finally:
+        conn.close()
