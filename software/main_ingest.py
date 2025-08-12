@@ -11,7 +11,7 @@ from software.db import (
     get_offsets_for_rp_ids,
     upsert_last_ts,
     insert_readings,
-    ensure_sensors,      # <-- FK safety
+    ensure_sensors,      # FK safety
 )
 
 logging.basicConfig(
@@ -62,7 +62,7 @@ def main():
         # 5) Insert in chunks; ensure FK won't fail by seeding sensors first
         if new_rows:
             missing_ids = {r["sensor_id"] for r in new_rows}
-            ensure_sensors(missing_ids)  # <-- makes FK happy
+            ensure_sensors(missing_ids)  # makes FK happy (adds sensor_type)
 
             logger.info("New rows to insert: %d", len(new_rows))
             start = 0

@@ -3,7 +3,7 @@ import os
 import json
 import logging
 from datetime import datetime, timezone
-from typing import Dict, Tuple, List
+from typing import Dict, Tuple, List, Set
 
 import psycopg2
 from psycopg2.extras import execute_values
@@ -90,18 +90,29 @@ def upsert_last_ts(offsets: Dict[Tuple[int, str], datetime]) -> None:
 
 # ---------- FK safety: sensors seeding ----------
 
-def ensure_sensors(sensor_ids: set[str]) -> None:
+def _derive_sensor_type(sensor_id: str) -> str:
     """
-    Insert missing sensor ids into public.sensors so the FK on measurements passes.
-    Only inserts the sensor_id; other columns remain NULL (can be backfilled later).
-    Safe to call repeatedly; uses ON CONFLICT DO NOTHING.
+    From 'Base_123.Measurement' → 'Base'
+    e.g. 'SFA30_93.Rh' -> 'SFA30'
+         'Differenzdrucksensor_37.DifferentialPressure' -> 'Differenzdrucksensor'
+         'Motionsensor/Reedsensor_72.Motion' -> 'Motionsensor/Reedsensor'
+    """
+    base = sensor_id.split('.', 1)[0]
+    return base.split('_', 1)[0] if '_' in base else base
+
+def ensure_sensors(sensor_ids: Set[str]) -> None:
+    """
+    Ensure rows exist in public.sensors to satisfy the FK on measurements.sensor_id.
+    Your schema requires sensor_type NOT NULL, so we insert (sensor_id, sensor_type).
+    description and unit_default are nullable and left NULL.
     """
     if not sensor_ids:
         return
-    records = [(sid,) for sid in sensor_ids]
+
+    records = [(sid, _derive_sensor_type(sid)) for sid in sensor_ids]
 
     sql = """
-        INSERT INTO sensors (sensor_id)
+        INSERT INTO sensors (sensor_id, sensor_type)
         VALUES %s
         ON CONFLICT (sensor_id) DO NOTHING
     """
