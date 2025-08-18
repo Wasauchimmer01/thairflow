@@ -28,6 +28,12 @@ def _sleep_with_countdown(minutes: int = 15) -> None:
 
 
 def run_forever() -> None:
+    """Ingest downloaded CSV reports in a continuous loop.
+
+    Logging must be configured by the caller prior to invoking this function,
+    e.g. via :func:`software.logging_setup.setup_logging` or by setting up
+    logging in another manner.
+    """
     os.makedirs("archive", exist_ok=True)
 
     while True:
@@ -100,8 +106,12 @@ def run_forever() -> None:
             _sleep_with_countdown()
 
 
-if __name__ == "__main__":
+def main() -> None:
     from software.logging_setup import setup_logging
 
     setup_logging()
     run_forever()
+
+
+if __name__ == "__main__":
+    main()
