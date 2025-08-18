@@ -12,7 +12,6 @@ from software.db import (
     upsert_last_ts,
     insert_readings,
     ensure_sensors,      # FK safety
-    log_processed_file,
 )
 from software.archiver import archive_with_date
 
@@ -48,9 +47,7 @@ def run_forever() -> None:
                     rows = parse_csv(rp_id, csv_path)
                     if not rows:
                         logger.warning("No readings parsed from %s", csv_path)
-                        ingested_at = datetime.now(timezone.utc)
-                        archived_path = archive_with_date(csv_path)
-                        log_processed_file(str(archived_path), ingested_at)
+                        archive_with_date(csv_path)
                         continue
 
                     # 3) Bulk fetch existing offsets for the rp_id(s) in this file
@@ -91,9 +88,7 @@ def run_forever() -> None:
                         logger.info("No new data in %s", csv_path)
 
                     # 7) Only archive if the file was fully handled
-                    ingested_at = datetime.now(timezone.utc)
-                    archived_path = archive_with_date(csv_path)
-                    log_processed_file(str(archived_path), ingested_at)
+                    archive_with_date(csv_path)
 
                 except Exception:
                     # If a file fails, leave it in downloads so the next run can retry
