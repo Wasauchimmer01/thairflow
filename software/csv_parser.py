@@ -4,12 +4,6 @@ from datetime import datetime, timezone
 import logging
 
 logger = logging.getLogger("csv_parser")
-if not logger.handlers:
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s %(levelname)-8s %(name)s %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
 
 def parse_csv(rp_id: int, filepath: str):
     """
