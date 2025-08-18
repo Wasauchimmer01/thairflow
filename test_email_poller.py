@@ -88,7 +88,7 @@ class EmailPollerTest(unittest.TestCase):
 
         with patch('software.email_poller.load_imap_config', return_value=config), \
              patch('imaplib.IMAP4_SSL', side_effect=OSError('network down')), \
-             self.assertLogs('email_poller', level='WARNING') as cm:
+             self.assertLogs('software.email_poller', level='WARNING') as cm:
             result = email_poller.poll_for_reports_once()
 
         self.assertEqual(result, [])

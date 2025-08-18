@@ -3,7 +3,7 @@ import os
 from datetime import datetime, timezone
 import logging
 
-logger = logging.getLogger("csv_parser")
+logger = logging.getLogger(__name__)
 
 def parse_csv(rp_id: int, filepath: str):
     """
