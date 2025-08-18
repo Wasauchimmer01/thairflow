@@ -5,6 +5,10 @@ import time
 from datetime import datetime, timezone
 from typing import Dict, Tuple
 
+from software.logging_setup import setup_logging
+
+setup_logging()
+
 from software.email_poller import poll_for_reports_once
 from software.csv_parser import parse_csv
 from software.db import (
@@ -16,11 +20,6 @@ from software.db import (
 )
 from software.archiver import archive_with_date
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)-8s %(name)s %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
 logger = logging.getLogger("main_ingest")
 
 # Separate file handler to capture only errors

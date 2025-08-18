@@ -11,11 +11,6 @@ import logging
 
 from software.config import load_imap_config
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s %(levelname)-8s %(name)s %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
 logger = logging.getLogger('email_poller')
 # Persist errors to file for later inspection
 error_handler = logging.FileHandler('email_errors.log')
