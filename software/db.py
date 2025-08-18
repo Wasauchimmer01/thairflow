@@ -8,7 +8,7 @@ from typing import Dict, Tuple, List, Set
 import psycopg2
 from psycopg2.extras import execute_values
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("db")
 
 # ---------- config / connection ----------
 

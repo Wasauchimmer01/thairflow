@@ -35,17 +35,9 @@ def setup_logging() -> None:
                 "maxBytes": 10 * 1024 * 1024,
                 "backupCount": 5,
             },
-            "errors": {
-                "class": "logging.handlers.RotatingFileHandler",
-                "formatter": "standard",
-                "level": "ERROR",
-                "filename": "logs/errors.log",
-                "maxBytes": 10 * 1024 * 1024,
-                "backupCount": 5,
-            },
         },
         "root": {
-            "handlers": ["console", "file", "errors"],
+            "handlers": ["console", "file"],
             "level": "INFO",
         },
     }

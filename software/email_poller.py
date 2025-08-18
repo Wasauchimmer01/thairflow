@@ -11,7 +11,7 @@ import logging
 
 from software.config import load_imap_config
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('email_poller')
 
 
 def process_message(msg: Message):
@@ -142,40 +142,7 @@ def poll_for_reports_once(max_per_cycle: int | None = None) -> list[tuple[int, s
                 pass
 
 
-def run_forever():
-    """Continuously poll for reports, pausing on errors or empty cycles.
-
-    This function assumes that logging has already been configured by the
-    caller. In command-line use, :func:`software.logging_setup.setup_logging`
-    should be invoked before calling :func:`run_forever`, or callers may set up
-    logging themselves.
-    """
-    while True:
-        try:
-            attachments = poll_for_reports_once()
-            if attachments:
-                logger.info("Saved %d attachment file(s) this run", len(attachments))
-                continue
-        except Exception:
-            logger.exception("Poller failure")
-
-        logger.info("retrying in 15 minutes")
-        next_attempt = time.time() + 15 * 60
-        logger.info("Next attempt at %s", time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(next_attempt)))
-        while True:
-            remaining = int(next_attempt - time.time())
-            if remaining <= 0:
-                break
-            logger.info("Next attempt in %d seconds", remaining)
-            time.sleep(min(60, remaining))
-
-
-def main() -> None:
-    from software.logging_setup import setup_logging
-
-    setup_logging()
-    run_forever()
-
-
 if __name__ == '__main__':
-    main()
+    # Optional: loop forever if you ever want a daemon mode
+    files = poll_for_reports_once()
+    logger.info("Saved %d attachment file(s) this run", len(files))
