@@ -3,6 +3,7 @@ import os
 import json
 import logging
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Dict, Tuple, List, Set
 
 import psycopg2
@@ -151,3 +152,29 @@ def insert_readings(rows: List[dict]) -> None:
         logger.info("Inserted %d measurements", len(records))
     finally:
         conn.close()
+
+
+# ---------- processed files logging ----------
+
+def log_processed_file(archive_path: str, ingestion_date: datetime) -> None:
+    """Record a processed file locally with its ingestion timestamp.
+
+    Instead of storing this information in the database, append it to a
+    ``processed_files.log`` file in the project root. Each line contains the
+    ISO formatted ingestion time followed by the archive path, separated by a
+    comma. This allows tracking processed files without requiring any database
+    schema changes.
+
+    Parameters
+    ----------
+    archive_path: str
+        Final archive location of the file.
+    ingestion_date: datetime
+        When the file was ingested.
+    """
+
+    log_path = Path("processed_files.log")
+    line = f"{ingestion_date.isoformat()},{archive_path}\n"
+    with log_path.open("a", encoding="utf-8") as fh:
+        fh.write(line)
+    logger.info("Logged processed file %s", archive_path)
