@@ -143,7 +143,13 @@ def poll_for_reports_once(max_per_cycle: int | None = None) -> list[tuple[int, s
 
 
 def run_forever():
-    """Continuously poll for reports, pausing on errors or empty cycles."""
+    """Continuously poll for reports, pausing on errors or empty cycles.
+
+    This function assumes that logging has already been configured by the
+    caller. In command-line use, :func:`software.logging_setup.setup_logging`
+    should be invoked before calling :func:`run_forever`, or callers may set up
+    logging themselves.
+    """
     while True:
         try:
             attachments = poll_for_reports_once()
@@ -164,8 +170,12 @@ def run_forever():
             time.sleep(min(60, remaining))
 
 
-if __name__ == '__main__':
+def main() -> None:
     from software.logging_setup import setup_logging
 
     setup_logging()
     run_forever()
+
+
+if __name__ == '__main__':
+    main()
