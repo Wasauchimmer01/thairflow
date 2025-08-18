@@ -11,7 +11,17 @@ import logging
 
 from software.config import load_imap_config
 
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)-8s %(name)s %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
 logger = logging.getLogger('email_poller')
+# Persist errors to file for later inspection
+error_handler = logging.FileHandler('email_errors.log')
+error_handler.setLevel(logging.ERROR)
+error_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)-8s %(name)s %(message)s'))
+logger.addHandler(error_handler)
 
 
 def process_message(msg: Message):
@@ -142,7 +152,27 @@ def poll_for_reports_once(max_per_cycle: int | None = None) -> list[tuple[int, s
                 pass
 
 
+def run_forever():
+    """Continuously poll for reports, pausing on errors or empty cycles."""
+    while True:
+        try:
+            attachments = poll_for_reports_once()
+            if attachments:
+                logger.info("Saved %d attachment file(s) this run", len(attachments))
+                continue
+        except Exception:
+            logger.exception("Poller failure")
+
+        logger.info("retrying in 15 minutes")
+        next_attempt = time.time() + 15 * 60
+        logger.info("Next attempt at %s", time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(next_attempt)))
+        while True:
+            remaining = int(next_attempt - time.time())
+            if remaining <= 0:
+                break
+            logger.info("Next attempt in %d seconds", remaining)
+            time.sleep(min(60, remaining))
+
+
 if __name__ == '__main__':
-    # Optional: loop forever if you ever want a daemon mode
-    files = poll_for_reports_once()
-    logger.info("Saved %d attachment file(s) this run", len(files))
+    run_forever()
