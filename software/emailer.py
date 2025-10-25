@@ -1,11 +1,31 @@
 import os
 import json
 from datetime import datetime
+import logging
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
+
+# ---------------------------------------------------------------------------
+# Logging setup
+# ---------------------------------------------------------------------------
+# All email related logs are written to a dedicated ``longemail`` folder so
+# the rest of the application can remain silent even when e‑mail delivery
+# fails (e.g. no internet connection, Gmail problems, …).
+LOG_DIR = os.path.join(os.path.dirname(__file__), os.pardir, "longemail")
+os.makedirs(LOG_DIR, exist_ok=True)
+
+logger = logging.getLogger(__name__)
+if not logger.handlers:
+    logger.setLevel(logging.INFO)
+    log_file = os.path.join(LOG_DIR, "emailer.log")
+    handler = logging.FileHandler(log_file)
+    handler.setFormatter(
+        logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+    )
+    logger.addHandler(handler)
 
 def load_email_config(path: str = "config_private/email_config.json") -> dict:
     """
@@ -41,7 +61,7 @@ def send_report(
     subject: str = None,
     body: str = None,
     config_path: str = "config_private/email_config.json"
-) -> None:
+) -> bool:
     """
     Send an email with the specified file as attachment.
 
@@ -51,8 +71,8 @@ def send_report(
         body (str, optional): Email body text. If None, uses template from config.
         config_path (str): Path to the email_config JSON file.
 
-    Raises:
-        Exception: Propagates any error during SMTP connection or sending.
+    Returns:
+        bool: ``True`` if the e-mail was sent successfully, ``False`` otherwise.
     """
     # 1) Load and validate config
     cfg = load_email_config(config_path)
@@ -79,43 +99,47 @@ def send_report(
     msg.attach(part)
 
     # 5) Connect to SMTP, secure, authenticate, and send
-    server = smtplib.SMTP(cfg["smtp_host"], cfg["smtp_port"])
     try:
+        server = smtplib.SMTP(cfg["smtp_host"], cfg["smtp_port"])
         if cfg.get("use_tls", False):
             server.starttls()
         server.login(cfg["username"], cfg["password"])
         server.sendmail(cfg["from_addr"], cfg["to_addrs"], msg.as_string())
+        logger.info("Email with '%s' sent to %s", filename, cfg["to_addrs"])
+        return True
+    except Exception as exc:  # pragma: no cover - network errors are unpredictable
+        logger.exception("Failed to send email: %s", exc)
+        print(f"Email send failed: {exc}")
+        return False
     finally:
-        server.quit()
+        try:
+            server.quit()
+        except Exception:
+            pass
 
 
-'''if __name__ == "__main__":
-    \gernerat 10 .csv File
-    for file in files
-        emailer filename subject ...
-        '''
-# only for test 
 if __name__ == "__main__":
+    """Simple loop to manually test the email functionality."""
+    import time
     from datetime import datetime, timedelta
-    interval = 1 
-        # back‐date so first send is immediate
-    last_sent = datetime.now() - timedelta(minutes=interval)
 
+    interval = 1  # minutes
+    last_sent = datetime.now() - timedelta(minutes=interval)
     print(f"Starting email loop: every {interval} minute(s). Ctrl+C to stop.")
+
     try:
         while True:
             now = datetime.now()
             if now - last_sent >= timedelta(minutes=interval):
-                try:
-                    send_report(
-                        filepath="daten.csv",
-                        subject=f"Loop Test Sensor Log {now:%Y-%m-%d %H:%M}",
-                        body="This is a looping test of the e-mail feature."
-                    )
+                if send_report(
+                    filepath="daten.csv",
+                    subject=f"Loop Test Sensor Log {now:%Y-%m-%d %H:%M}",
+                    body="This is a looping test of the e-mail feature.",
+                ):
                     print(f"[{now:%H:%M:%S}]  Email sent")
                     last_sent = now
-                except Exception as e:
-                    print(f"[{now:%H:%M:%S}]  Failed to send: {e}")
+                else:
+                    print(f"[{now:%H:%M:%S}]  Failed to send (see log)")
             # check every second to avoid drift
             time.sleep(1)
     except KeyboardInterrupt:
